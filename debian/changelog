@@ -1,0 +1,7 @@
+electrum (1.8-1) unstable; urgency=low
+
+  * Initial Release.
+    Closes: bug#704464
+
+ -- Vasudev Kamath <kamathvasudev@gmail.com>  Wed, 19 Jun 2013 21:44:47 +0530
+
