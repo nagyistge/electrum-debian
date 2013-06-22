@@ -37,3 +37,7 @@ DEB_UPSTREAM_CRUFT_MOVE = ecdsa aes
 # Ignore graphics and .mo files in addition to the default debian files
 DEB_COPYRIGHT_CHECK_IGNORE_REGEX = ^(locale/.*/.*\.mo|data/dark/.*\.png|icons/.*\.png|LICENSE|debian/(changelog|copyright(|_hints|_newhints)))$
 
+pre-build::
+	python mki18n.py
+	pyrcc4 icons.qrc -o gui/icons_rc.py
+
