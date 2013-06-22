@@ -33,3 +33,7 @@ CDBS_DEPENDS_$(python_module) = $(electrum_depends)
 # Move aes and ecdsa from build directory to let package link against
 # the python-ecdsa and python-slowaes
 DEB_UPSTREAM_CRUFT_MOVE = ecdsa aes
+
+# Ignore graphics and .mo files in addition to the default debian files
+DEB_COPYRIGHT_CHECK_IGNORE_REGEX = ^(locale/.*/.*\.mo|data/dark/.*\.png|icons/.*\.png|LICENSE|debian/(changelog|copyright(|_hints|_newhints)))$
+
