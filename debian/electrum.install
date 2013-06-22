@@ -1,0 +1,5 @@
+usr/bin/electrum
+usr/share/applications/electrum.desktop
+usr/share/app-install/icons/electrum.png
+usr/share/locale/*
+usr/share/electrum/*
