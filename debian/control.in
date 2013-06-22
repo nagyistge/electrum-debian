@@ -3,24 +3,39 @@ Priority: optional
 Section: utils
 Maintainer: Debian Bitcoin Packaging Team <pkg-bitcoin-devel@lists.alioth.debian.org>
 Uploaders: Vasudev Kamath <kamathvasudev@gmail.com>
+Build-Depends: @cdbs@
 Standards-Version: 3.9.4
 Homepage: http://electrum.org/
 Vcs-Git: git://anonscm.debian.org/pkg-bitcoin/electrum.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-bitcoin/electrum.git
+X-Python-Version: >= 2.6
+
+Package: python-electrum
+Architecture: all
+Depends: ${misc:Depends}, ${python:Depends}
+Description: Easy to use bitcoin client - python module
+ This package provides a light weight bitcoin client which protects
+ you from loosing your bitcoin in a backup mistake or computer
+ failure. Also electrum does not require waiting time because it does
+ not download bitcoin block chain.
+ .
+ This package provides electrum python module which can be used to
+ access bitcoin wallet from python programs.
 
 Package: electrum
 Architecture: all
-Depends: ${misc:Depends}
+Depends: ${misc:Depends},
+ ${python:Depends},
+ python-electrum
 Description: Easy to use bitcoin client
  This package provides a light weight bitcoin client which protects
  you from loosing your bitcoin in a backup mistake or computer
  failure. Also electrum does not require waiting time because it does
  not download bitcoin block chain.
  .
- Features:
+ Features of the electurm are listed. below
    * Instant on: client does not download block chain, uses remote
      server
    * Forgiving: wallet can be recovered from secret seed.
    * Safe: seed or private keys are not sent to the server,
      information received from the server is verified using SPV.
- 
