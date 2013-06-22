@@ -27,8 +27,11 @@ CDBS_BUILD_DEPENDS += , $(electrum_depends), pyqt4-dev-tools
 # Suppress unneeded build-dependencies
 CDBS_BUILD_DEPENDS_class_python-distutils_python =
 
-# dependency
-CDBS_DEPENDS_$(python_module) = $(electrum_depends)
+# dependency for module
+CDBS_DEPENDS_$(python_module) += $(electrum_depends)
+
+# dependency for program
+CDBS_DEPENDS_$(package) += python (>= 2.6)
 
 # Move aes and ecdsa from build directory to let package link against
 # the python-ecdsa and python-slowaes
