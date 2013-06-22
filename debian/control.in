@@ -11,6 +11,7 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-bitcoin/electrum.git
 X-Python-Version: >= 2.6
 
 Package: python-electrum
+Section: python
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}
 Description: Easy to use bitcoin client - python module
@@ -19,8 +20,8 @@ Description: Easy to use bitcoin client - python module
  failure. Also electrum does not require waiting time because it does
  not download bitcoin block chain.
  .
- This package provides electrum python module which can be used to
- access bitcoin wallet from python programs.
+ This package provides electrum Python module which can be used to
+ access bitcoin wallet from Python programs.
 
 Package: electrum
 Architecture: all
