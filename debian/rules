@@ -13,3 +13,20 @@ DEB_UPSTREAM_TARBALL_EXTENSION = tar.gz
 
 DEB_UPSTREAM_URL = http://download.electrum.org/download
 DEB_UPSTREAM_TARBALL_MD5 = 9ed7ae90c792828c1f0546751f3131bd
+
+package = electrum
+python_module = python-$(package)
+
+
+# dependency
+electrum_depends = python-ecdsa, python-slowaes
+
+# CDBS build depends
+CDBS_BUILD_DEPENDS += , $(electrum_depends)
+
+# dependency
+CDBS_DEPENDS_$(python_module) = $(electrum_depends)
+
+# Move aes and ecdsa from build directory to let package link against
+# the python-ecdsa and python-slowaes
+DEB_UPSTREAM_CRUFT_MOVE = ecdsa aes
