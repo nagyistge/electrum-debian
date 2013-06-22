@@ -1,0 +1,16 @@
+Description: Add trailing semicolon
+ Last entry was missing a ";" this error was indicated by
+ desktop-file-validate command.
+Author: Vasudev Kamath <kamathvasudev@gmail.com>
+Forwarded: no
+Last-Update: 2013-06-22
+
+--- electrum-1.8.orig/electrum.desktop
++++ electrum-1.8/electrum.desktop
+@@ -13,5 +13,5 @@ Categories=Network;
+ StartupNotify=false
+ Terminal=false
+ Type=Application
+-MimeType=x-scheme-handler/bitcoin
++MimeType=x-scheme-handler/bitcoin;
+ 
