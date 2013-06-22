@@ -1,0 +1,3 @@
+version = 3
+opts=uversionmangle=s/(\d)(alpha|beta|rc)/$1~$2/,dversionmangle=s/~dfsg\d*// \
+ http://download.electrum.org/download/Electrum-(\d[\d\.]+)\.tar\.gz
