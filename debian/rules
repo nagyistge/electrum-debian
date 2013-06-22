@@ -22,7 +22,7 @@ python_module = python-$(package)
 electrum_depends = python-ecdsa, python-slowaes
 
 # CDBS build depends
-CDBS_BUILD_DEPENDS += , $(electrum_depends)
+CDBS_BUILD_DEPENDS += , $(electrum_depends), pyqt4-dev-tools
 
 # Suppress unneeded build-dependencies
 CDBS_BUILD_DEPENDS_class_python-distutils_python =
