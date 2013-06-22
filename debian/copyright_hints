@@ -142,31 +142,6 @@ Copyright: 2012, thomasv@ecdsa.org
 License: GPL-3+
  FIXME
 
-Files: LICENCE
-Copyright: 2007, Free Software Foundation, Inc. <http://fsf.org/>
-  <year> <name of author>
-  HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS
-  are not
-  disclaimer" for the program, if necessary
-  holder as a result of your choosing to follow a
-  holder explicitly and
-  holder is
-  holder is reinstated (a)
-  holder notifies you of the
-  holder who authorizes use under this
-  holder, and you cure the violation prior to 30 days after
-  holders of
-  if you do
-  law
-  law, except executing it on a
-  on the Program, and are irrevocable provided the stated
-  on the software, and (2) offer you this License
-  permission
-  permission, other than the making of an
-  treaty adopted on 20 December 1996, or
-License: GPL-ever
- FIXME
-
 Files: gui/gui_text.py
 Copyright: in ['^N'
 License: UNKNOWN
