@@ -13,7 +13,9 @@ X-Python-Version: >= 2.6
 Package: python-electrum
 Section: python
 Architecture: all
-Depends: ${misc:Depends}, ${python:Depends}
+Depends: ${misc:Depends},
+ ${python:Depends},
+ ${cdbs:Depends}
 Description: Easy to use bitcoin client - python module
  This package provides a light weight bitcoin client which protects
  you from loosing your bitcoin in a backup mistake or computer
@@ -26,8 +28,8 @@ Description: Easy to use bitcoin client - python module
 Package: electrum
 Architecture: all
 Depends: ${misc:Depends},
- ${python:Depends},
- python-electrum
+ ${cdbs:Depends},
+ python-electrum (= ${binary:Version})
 Description: Easy to use bitcoin client
  This package provides a light weight bitcoin client which protects
  you from loosing your bitcoin in a backup mistake or computer
