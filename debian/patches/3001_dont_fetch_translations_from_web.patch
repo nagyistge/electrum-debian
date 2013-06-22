@@ -1,0 +1,24 @@
+Description: Do not fetch webpage during build
+ Script mki18n.py generates the po file for which it retrives data
+ from the web. This patch makes the script read the translations from
+ a locally saved file debian/electrum.translations.
+Author: Vasudev Kamath <kamathvasudev@gmail.com>
+Forwarded: not-needed
+Last-Update: 2013-06-22
+
+--- electrum-1.8.orig/mki18n.py
++++ electrum-1.8/mki18n.py
+@@ -3,9 +3,10 @@
+ import urllib2, os
+ from lib.version import TRANSLATION_ID
+ 
+-#url = "https://en.bitcoin.it/w/index.php?title=Electrum/Translation&oldid=%d&action=raw"%TRANSLATION_ID
+-url = "http://bitcoin.wikia.com/wiki/Electrum?oldid=%d&action=raw"%TRANSLATION_ID
+-f = urllib2.urlopen(url)
++# #url = "https://en.bitcoin.it/w/index.php?title=Electrum/Translation&oldid=%d&action=raw"%TRANSLATION_ID
++# url = "http://bitcoin.wikia.com/wiki/Electrum?oldid=%d&action=raw"%TRANSLATION_ID
++# f = urllib2.urlopen(url)
++f = open('debian/electrum.translations')
+ lines = f.readlines()
+ dicts = {}
+ message = None
