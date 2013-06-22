@@ -24,6 +24,9 @@ electrum_depends = python-ecdsa, python-slowaes
 # CDBS build depends
 CDBS_BUILD_DEPENDS += , $(electrum_depends)
 
+# Suppress unneeded build-dependencies
+CDBS_BUILD_DEPENDS_class_python-distutils_python =
+
 # dependency
 CDBS_DEPENDS_$(python_module) = $(electrum_depends)
 
