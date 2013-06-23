@@ -29,7 +29,7 @@ License: GPL-3+
 Files: aes/*
 Copyright: 2008, Josh Davis <http://www.josh-davis.org>
  Alex Martelli <http://www.aleax.it>
-License: Apache-2.0
+License: Apache-2
 
 Files: lib/socks.py
 Copyright: 2006, Dan-Haim
