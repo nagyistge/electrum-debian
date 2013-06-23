@@ -49,3 +49,8 @@ Description: Easy to use bitcoin client
    * Forgiving: wallet can be recovered from secret seed.
    * Safe: seed or private keys are not sent to the server,
      information received from the server is verified using SPV.
+   * No downtimes: several public servers are available, so one can
+     switch instantly.
+   * Ubiquitous: same wallet can be used on different server, it will
+     auto syncrhonize.
+   * Open: private keys can be exported into other clients.
