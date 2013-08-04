@@ -20,8 +20,17 @@ Files: AUTHORS
  debian/compat
  debian/control
  debian/control.in
+ debian/electrum.1
+ debian/electrum.doc-base
+ debian/electrum.install
+ debian/electrum.manpages
+ debian/patches/2001_add_tailing_semicolon.patch
+ debian/patches/3001_dont_fetch_translations_from_web.patch
+ debian/patches/series
+ debian/python-electrum.install
  debian/rules
  debian/source/format
+ debian/watch
  docs/android.html
  docs/console.html
  docs/offline_wallets
@@ -140,6 +149,31 @@ License: GPL-3+
 Files: lib/verifier.py
 Copyright: 2012, thomasv@ecdsa.org
 License: GPL-3+
+ FIXME
+
+Files: LICENCE
+Copyright: 2007, Free Software Foundation, Inc. <http://fsf.org/>
+  <year> <name of author>
+  HOLDER, OR ANY OTHER PARTY WHO MODIFIES AND/OR CONVEYS
+  are not
+  disclaimer" for the program, if necessary
+  holder as a result of your choosing to follow a
+  holder explicitly and
+  holder is
+  holder is reinstated (a)
+  holder notifies you of the
+  holder who authorizes use under this
+  holder, and you cure the violation prior to 30 days after
+  holders of
+  if you do
+  law
+  law, except executing it on a
+  on the Program, and are irrevocable provided the stated
+  on the software, and (2) offer you this License
+  permission
+  permission, other than the making of an
+  treaty adopted on 20 December 1996, or
+License: GPL-ever
  FIXME
 
 Files: gui/gui_text.py
