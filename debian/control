@@ -3,10 +3,10 @@ Priority: optional
 Section: utils
 Maintainer: Debian Bitcoin Packaging Team <pkg-bitcoin-devel@lists.alioth.debian.org>
 Uploaders: Vasudev Kamath <kamathvasudev@gmail.com>
-Build-Depends: debhelper,
+Build-Depends: cdbs (>= 0.4.106~),
+ debhelper,
  dh-buildinfo,
  devscripts,
- cdbs (>= 0.4.106~),
  python,
  python-ecdsa,
  python-slowaes,
