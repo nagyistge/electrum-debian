@@ -28,7 +28,7 @@ CDBS_BUILD_DEPENDS += , $(electrum_depends), pyqt4-dev-tools
 CDBS_BUILD_DEPENDS_class_python-distutils_python =
 
 # dependency for module
-CDBS_DEPENDS_$(python_module) += $(electrum_depends)
+CDBS_DEPENDS_$(python_module) += $(electrum_depends), python-qt4
 
 # dependency for program
 CDBS_DEPENDS_$(package) += python (>= 2.6)
