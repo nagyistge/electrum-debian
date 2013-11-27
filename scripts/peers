@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-from electrum import Interface
+import time, electrum
 
-i = Interface({'server':'ecdsa.org:50001:t'})
-i.start()
-i.send([('server.peers.subscribe',[])])
+electrum.set_verbosity(False)     # default is True
 
-while True:
-    r = i.get_response()
-    print r.get('result')
+network = electrum.Network({'verbose':False})
+network.start(wait=True)
+time.sleep(1)
+electrum.print_json( network.heights )
+
+

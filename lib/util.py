@@ -1,9 +1,16 @@
-import os, sys, re
+import os, sys, re, json
 import platform
 import shutil
 from datetime import datetime
 is_verbose = True
 
+
+class MyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        from transaction import Transaction
+        if isinstance(obj, Transaction): 
+            return obj.as_dict()
+        return super(MyEncoder, self).default(obj)
 
 
 def set_verbosity(b):
@@ -23,23 +30,12 @@ def print_msg(*args):
     sys.stdout.flush()
 
 def print_json(obj):
-    import json
-    s = json.dumps(obj,sort_keys = True, indent = 4)
+    try:
+        s = json.dumps(obj, sort_keys = True, indent = 4, cls=MyEncoder)
+    except TypeError:
+        s = repr(obj)
     sys.stdout.write(s + "\n")
     sys.stdout.flush()
-
-
-def check_windows_wallet_migration():
-    if platform.release() != "XP":
-        if os.path.exists(os.path.join(os.environ["LOCALAPPDATA"], "Electrum")):
-            if os.path.exists(os.path.join(os.environ["APPDATA"], "Electrum")):
-                print_msg("Two Electrum folders have been found, the default Electrum location for Windows has changed from %s to %s since Electrum 1.7, please check your wallets and fix the problem manually." % (os.environ["LOCALAPPDATA"], os.environ["APPDATA"]))
-                sys.exit()
-            try:
-                shutil.move(os.path.join(os.environ["LOCALAPPDATA"], "Electrum"), os.path.join(os.environ["APPDATA"]))
-                print_msg("Your wallet has been moved from %s to %s."% (os.environ["LOCALAPPDATA"], os.environ["APPDATA"]))
-            except:
-                print_msg("Failed to move your wallet.")
     
 
 def user_dir():
@@ -49,8 +45,10 @@ def user_dir():
         return os.path.join(os.environ["APPDATA"], "Electrum")
     elif "LOCALAPPDATA" in os.environ:
         return os.path.join(os.environ["LOCALAPPDATA"], "Electrum")
+    elif 'ANDROID_DATA' in os.environ:
+        return "/sdcard/electrum/"
     else:
-        #raise BaseException("No home directory found in environment variables.")
+        #raise Exception("No home directory found in environment variables.")
         return 
 
 def appdata_dir():
@@ -79,7 +77,7 @@ def local_data_dir():
     return local_data
 
 
-def format_satoshis(x, is_diff=False, num_zeros = 0, decimal_point = 8):
+def format_satoshis(x, is_diff=False, num_zeros = 0, decimal_point = 8, whitespaces=False):
     from decimal import Decimal
     s = Decimal(x)
     sign, digits, exp = s.as_tuple()
@@ -95,8 +93,9 @@ def format_satoshis(x, is_diff=False, num_zeros = 0, decimal_point = 8):
 
     p = s.find('.')
     s += "0"*( 1 + num_zeros - ( len(s) - p ))
-    s += " "*( 1 + decimal_point - ( len(s) - p ))
-    s = " "*( 13 - decimal_point - ( p )) + s 
+    if whitespaces:
+        s += " "*( 1 + decimal_point - ( len(s) - p ))
+        s = " "*( 13 - decimal_point - ( p )) + s 
     return s
 
 
@@ -156,6 +155,7 @@ _ud = re.compile('%([0-9a-hA-H]{2})', re.MULTILINE)
 urldecode = lambda x: _ud.sub(lambda m: chr(int(m.group(1), 16)), x)
 
 def parse_url(url):
+    url = str(url)
     o = url[8:].split('?')
     address = o[0]
     if len(o)>1:
@@ -179,4 +179,12 @@ def parse_url(url):
     return address, amount, label, message, signature, identity, url
 
 
-
+# Python bug (http://bugs.python.org/issue1927) causes raw_input
+# to be redirected improperly between stdin/stderr on Unix systems
+def raw_input(prompt=None):
+    if prompt:
+        sys.stdout.write(prompt)
+    return builtin_raw_input()
+import __builtin__
+builtin_raw_input = __builtin__.raw_input
+__builtin__.raw_input = raw_input

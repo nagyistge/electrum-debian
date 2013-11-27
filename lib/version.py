@@ -1,4 +1,5 @@
-ELECTRUM_VERSION = "1.8"    # version of the client package
+ELECTRUM_VERSION = "1.9.5"  # version of the client package
 PROTOCOL_VERSION = '0.6'    # protocol version requested
-SEED_VERSION     = 4        # bump this every time the seed generation is modified
-TRANSLATION_ID   = 4073     # version of the wiki page 
+SEED_VERSION     = 6        # bump this every time the seed generation is modified
+SEED_PREFIX      = '01'     # the hash of the mnemonic seed must begin with this
+

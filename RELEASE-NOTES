@@ -1,3 +1,46 @@
+# Release 1.9.5
+
+* Coin control: select addresses to send from
+* Put addresses that have been used in a minimized section (Qt GUI)
+* Allow non ascii chars in passwords
+
+
+# Release 1.9.4
+bugfixes: offline transactions
+
+# Release 1.9.3
+bugfixes: connection problems, transactions staying unverified
+
+# Release 1.9.2
+* fix a syntax error
+
+# Release 1.9.1
+* fix regression with --offline mode
+* fix regression with --portable mode: use a dedicated directory
+
+# Release 1.9
+
+* The client connects to multiple servers in order to retrieve block headers and find the longest chain
+* SSL certificate validation (to prevent MITM)
+* Deterministic signatures (RFC 6979)
+* Menu to create/restore/open wallets
+* Create transactions with multiple outputs from CSV (comma separated values)
+* New text gui: stdio
+* Plugins are no longer tied to the qt GUI, they can reach all GUIs
+* Proxy bugs have been fixed
+
+
+# Release 1.8.1
+
+* Notification option when receiving new tranactions 
+* Confirm dialogue before sending large amounts 
+* Alternative datafile location for non-windows systems
+* Fix offline wallet creation
+* Remove enforced tx fee
+* Tray icon improvements
+* Various bugfixes 
+
+
 # Release 1.8
 
 * Menubar in classic gui
