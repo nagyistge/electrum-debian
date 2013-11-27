@@ -10,20 +10,27 @@ Comment:
  which they worked and hold license.
 
 Files: electrum
- gui/gui_android.py
- gui/gui_gtk.py
- gui/i18n.py
- gui/gui_classic.py
- gui/network_dialog.py
+ gui/android.py
+ gui/gtk.py
+ gui/qt/__init__.py
+ gui/qt/network_dialog.py
+ gui/qt/password_dialog.py
+ gui/qt/seed_dialog.py
+ gui/qt/transaction_dialog.py
+ gui/qt/version_getter.py
+ lib/account.py
+ lib/bitcoin.py
+ lib/blockchain.py
  lib/commands.py
+ lib/i18n.py
  lib/interface.py
  lib/mnemonic.py
- lib/wallet.py
- lib/wallet_bitkey.py
- lib/bitcoin.py
+ lib/transaction.py
  lib/verifier.py
- scripts/merchant.py
-Copyright: 2011-2012, ThomasV <thomasv@gitorious>
+ lib/wallet_bitkey.py
+ lib/wallet.py
+ scripts/merchant/merchant.py
+Copyright: 2011-2013, ThomasV <thomasv@gitorious>
 License: GPL-3+
 
 Files: aes/*
@@ -46,12 +53,12 @@ Files: lib/ripemd.py
 Copyright: 2001, Markus Friedl
 License: BSD-2-clause
 
-Files: gui/bmp.py
+Files: lib/bmp.py
 Copyright: 2003, Paul McGuire
  2009, Margus Laak
 License: Expat
 
-Files: gui/pyqrnative.py
+Files: lib/pyqrnative.py
 Copyright: 2009, Kazuhiko Arase
 License: Expat
 
@@ -61,6 +68,10 @@ License: Expat
 Comment:
  Portions written in 2005 by Peter Pearson are placed in public
  domain.
+
+Files: ecdsa/six.py
+Copyright: 2010-2012, Benjamin Peterson
+License: Expat
 
 Files: debian/*
 Copyright: 2013, Vasudev Kamath
