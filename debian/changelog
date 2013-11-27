@@ -1,6 +1,7 @@
 electrum (1.9.5-1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release (closes: #730353).
+    - Contacts bugfix included in 1.8.1 (closes: #727232).
   * Acknowledge NMU.
   * Update watch file.
 
