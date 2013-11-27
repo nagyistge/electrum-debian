@@ -6,19 +6,51 @@ Author: Vasudev Kamath <kamathvasudev@gmail.com>
 Forwarded: not-needed
 Last-Update: 2013-06-22
 
---- electrum-1.8.orig/mki18n.py
-+++ electrum-1.8/mki18n.py
-@@ -3,9 +3,10 @@
- import urllib2, os
- from lib.version import TRANSLATION_ID
+Index: electrum/mki18n.py
+===================================================================
+--- electrum.orig/mki18n.py	2013-11-28 00:06:17.002789913 +0200
++++ electrum/mki18n.py	2013-11-28 00:06:36.431091871 +0200
+@@ -1,41 +1,13 @@
+ #!/usr/bin/python
+-from StringIO import StringIO
+-import urllib2, os, zipfile, pycurl
++import os, zipfile
  
--#url = "https://en.bitcoin.it/w/index.php?title=Electrum/Translation&oldid=%d&action=raw"%TRANSLATION_ID
--url = "http://bitcoin.wikia.com/wiki/Electrum?oldid=%d&action=raw"%TRANSLATION_ID
--f = urllib2.urlopen(url)
-+# #url = "https://en.bitcoin.it/w/index.php?title=Electrum/Translation&oldid=%d&action=raw"%TRANSLATION_ID
-+# url = "http://bitcoin.wikia.com/wiki/Electrum?oldid=%d&action=raw"%TRANSLATION_ID
-+# f = urllib2.urlopen(url)
-+f = open('debian/electrum.translations')
- lines = f.readlines()
- dicts = {}
- message = None
+ crowdin_identifier = 'electrum'
+ crowdin_file_name = 'electrum-client/messages.pot'
+ locale_file_name = 'locale/messages.pot'
+ 
+-if os.path.exists('build/crowdin_api_key.txt'):
+-    crowdin_api_key = open('build/crowdin_api_key.txt').read()
+-
+-    # Generate fresh translation template
+-    if not os.path.exists('locale'):
+-      os.mkdir('locale')
+-
+-    cmd = 'xgettext -s --no-wrap -f app.fil --output=locale/messages.pot'
+-    print 'Generate template'
+-    os.system(cmd)
+-
+-    # Push to Crowdin
+-    print 'Push to Crowdin'
+-    url = ('http://api.crowdin.net/api/project/' + crowdin_identifier + '/update-file?key=' + crowdin_api_key)
+-
+-    c = pycurl.Curl()
+-    c.setopt(c.URL, url)
+-    c.setopt(c.POST, 1)
+-    fields = [('files[' + crowdin_file_name + ']', (pycurl.FORM_FILE, locale_file_name))]
+-    c.setopt(c.HTTPPOST, fields)
+-    c.perform()
+-
+-    # Build translations
+-    print 'Build translations'
+-    response = urllib2.urlopen('http://api.crowdin.net/api/project/' + crowdin_identifier + '/export?key=' + crowdin_api_key).read()
+-    print response
+-
+ # Download & unzip
+ print 'Download translations'
+-zfobj = zipfile.ZipFile(StringIO(urllib2.urlopen('http://crowdin.net/download/project/' + crowdin_identifier + '.zip').read()))
++zfobj = zipfile.ZipFile(open('debian/electrum-translations.zip', 'rb'))
+ 
+ print 'Unzip translations'
+ for name in zfobj.namelist():
