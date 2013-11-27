@@ -7,9 +7,8 @@ from PyQt4.QtCore import *
 import PyQt4.QtCore as QtCore
 import PyQt4.QtGui as QtGui
 
-from electrum_gui.qrcodewidget import QRCodeWidget
-from electrum_gui import bmp, pyqrnative
-from electrum_gui.i18n import _
+from electrum import bmp, pyqrnative
+from electrum.i18n import _
 
 from electrum import util
 
@@ -17,15 +16,21 @@ ALIAS_REGEXP = '^(|([\w\-\.]+)@)((\w[\w\-]+\.)+[\w\-]+)$'
 
 
 
-from electrum_gui import BasePlugin
+from electrum.plugins import BasePlugin
+
 class Plugin(BasePlugin):
 
-    def __init__(self, gui):
-        BasePlugin.__init__(self, gui, 'aliases', 'Aliases', _('Retrieve aliases using http.'))
+    def fullname(self): return 'Aliases'
+
+    def description(self): return _('Retrieve aliases using http.')
+
+    def init(self):
         self.aliases      = self.config.get('aliases', {})            # aliases for addresses
         self.authorities  = self.config.get('authorities', {})        # trusted addresses
         self.receipts     = self.config.get('receipts',{})            # signed URIs
 
+    def is_available(self):
+        return False
 
     def timer_actions(self):
         if self.gui.payto_e.hasFocus():
@@ -37,7 +42,7 @@ class Plugin(BasePlugin):
             if re.match('^(|([\w\-\.]+)@)((\w[\w\-]+\.)+[\w\-]+)$', r):
                 try:
                     to_address = self.get_alias(r, True, self.gui.show_message, self.gui.question)
-                except:
+                except Exception:
                     return
                 if to_address:
                     s = r + '  <' + to_address + '>'
@@ -47,7 +52,7 @@ class Plugin(BasePlugin):
     def get_alias(self, alias, interactive = False, show_message=None, question = None):
         try:
             target, signing_address, auth_name = read_alias(self, alias)
-        except BaseException, e:
+        except Exception as e:
             # raise exception if verify fails (verify the chain)
             if interactive:
                 show_message("Alias error: " + str(e))
@@ -98,7 +103,7 @@ class Plugin(BasePlugin):
             return ''
         try:
             lines = urllib.urlopen(url).readlines()
-        except:
+        except Exception:
             return ''
 
         # line 0
@@ -142,7 +147,7 @@ class Plugin(BasePlugin):
             try:
                 EC_KEY.verify_message(signing_address, signature, url )
                 self.receipt = (signing_address, signature, url)
-            except:
+            except Exception:
                 show_message('Warning: the URI contains a bad signature.\nThe identity of the recipient cannot be verified.')
                 address = amount = label = identity = message = ''
 
