@@ -1,0 +1,19 @@
+Description: Do not not install into ~/.local
+ setup.py tries to be smart about installing into $XDG_DATA_HOME, but this is
+ never the right location for building a system package.
+Author: Tristan Seligmann <mithrandi@debian.org>
+Forwarded: not-needed
+Last-Update: 2013-11-28
+Index: electrum/setup.py
+===================================================================
+--- electrum.orig/setup.py	2013-11-27 23:52:12.701659641 +0200
++++ electrum/setup.py	2013-11-28 00:26:40.881727396 +0200
+@@ -16,8 +16,6 @@
+     sys.exit("Error: Electrum requires Python version >= 2.6.0...")
+ 
+ usr_share = '/usr/share'
+-if not os.access(usr_share, os.W_OK):
+-    usr_share = os.getenv("XDG_DATA_HOME", os.path.join(os.getenv("HOME"), ".local", "share"))
+ 
+ data_files = []
+ if (len(sys.argv) > 1 and (sys.argv[1] == "sdist")) or (platform.system() != 'Windows' and platform.system() != 'Darwin'):
