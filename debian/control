@@ -2,7 +2,8 @@ Source: electrum
 Priority: optional
 Section: utils
 Maintainer: Debian Bitcoin Packaging Team <pkg-bitcoin-devel@lists.alioth.debian.org>
-Uploaders: Vasudev Kamath <kamathvasudev@gmail.com>
+Uploaders: Vasudev Kamath <kamathvasudev@gmail.com>,
+ Tristan Seligmann <mithrandi@mithrandi.net>
 Build-Depends: cdbs (>= 0.4.106~),
  debhelper,
  dh-buildinfo,
