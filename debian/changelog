@@ -6,6 +6,7 @@ electrum (1.9.5-1) UNRELEASED; urgency=low
   * Update watch file.
   * Add myself to Uploaders.
   * Update mk18n.py patch and ship new translations file.
+  * Bump dependency on python-ecdsa for secp256k1.
 
  -- Tristan Seligmann <mithrandi@debian.org>  Wed, 27 Nov 2013 23:35:59 +0200
 
