@@ -2,7 +2,8 @@ Description: Do not fetch webpage during build
  Script mki18n.py generates the po file for which it retrives data
  from the web. This patch makes the script read the translations from
  a locally saved file debian/electrum.translations.
-Author: Vasudev Kamath <kamathvasudev@gmail.com>
+Author: Vasudev Kamath <kamathvasudev@gmail.com>,
+ Tristan Seligmann <mithrandi@mithrandi.net>
 Forwarded: not-needed
 Last-Update: 2013-06-22
 
