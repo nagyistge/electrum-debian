@@ -11,8 +11,9 @@ Build-Depends: cdbs (>= 0.4.106~),
  python,
  python-ecdsa (>= 0.9~),
  python-slowaes,
- pyqt4-dev-tools,
- python-setuptools
+ python-qt4,
+ python-setuptools,
+ pyqt4-dev-tools
 Standards-Version: 3.9.4
 Homepage: http://electrum.org/
 Vcs-Git: git://anonscm.debian.org/pkg-bitcoin/electrum.git
