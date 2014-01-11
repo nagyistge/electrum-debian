@@ -19,16 +19,16 @@ python_module = python-$(package)
 
 
 # dependency
-electrum_depends = python-ecdsa, python-slowaes
+electrum_depends = python-ecdsa (>= 0.9~), python-slowaes, python-qt4
 
 # CDBS build depends
-CDBS_BUILD_DEPENDS += , $(electrum_depends), pyqt4-dev-tools
+CDBS_BUILD_DEPENDS += , $(electrum_depends), python-setuptools, pyqt4-dev-tools
 
 # Suppress unneeded build-dependencies
 CDBS_BUILD_DEPENDS_class_python-distutils_python =
 
 # dependency for module
-CDBS_DEPENDS_$(python_module) += $(electrum_depends), python-qt4
+CDBS_DEPENDS_$(python_module) += $(electrum_depends)
 
 # dependency for program
 CDBS_DEPENDS_$(package) += python (>= 2.6)
