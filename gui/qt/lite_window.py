@@ -355,8 +355,7 @@ class MiniWindow(QDialog):
     def closeEvent(self, event):
         g = self.geometry()
         self.config.set_key("winpos-lite", [g.left(),g.top(),g.width(),g.height()],True)
-        
-        super(MiniWindow, self).closeEvent(event)
+        self.actuator.g.closeEvent(event)
         qApp.quit()
 
     def set_payment_fields(self, dest_address, amount):
@@ -759,7 +758,7 @@ class MiniActuator:
 
             self.waiting_dialog(lambda: False if self.g.wallet.tx_event.isSet() else _("Sending transaction, please wait..."))
               
-            status, message = self.g.wallet.receive_tx(h)
+            status, message = self.g.wallet.receive_tx(h, tx)
 
             if not status:
                 import tempfile
