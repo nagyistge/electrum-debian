@@ -1,10 +1,24 @@
+electrum (1.9.5-2) UNRELEASED; urgency=medium
+
+  [ Vasudev Kamath ]
+  * Add Tristan Seligmann as uploader in debian/control.in
+  * Build-Depends added to debian/control moved to debian/rules for clean
+    regeneration of control using CDBS.
+  * Rename dont_use_local_share.patch to follow patch naming micro
+    guidelines as defined in debian/patches/README.
+  * Clean up patch headers of dont_use_local_share.patch
+  * Add README.source describing some CDBS conventions used in the package.
+
+ -- Tristan Seligmann <mithrandi@debian.org>  Wed, 15 Jan 2014 01:05:47 +0200
+
 electrum (1.9.5-1) unstable; urgency=low
 
+  [ Tristan Seligmann ]
   * New upstream release (closes: #730353).
     - Contacts bugfix included in 1.8.1 (closes: #727232).
+  * Add myself to Uploaders.
   * Acknowledge NMU.
   * Update watch file.
-  * Add myself to Uploaders.
   * Update mk18n.py patch and ship new translations file.
   * Bump dependency on python-ecdsa for secp256k1.
   * Remove deprecated CDBS dependency management.
@@ -26,4 +40,3 @@ electrum (1.8-1) unstable; urgency=low
     Closes: bug#704464
 
  -- Vasudev Kamath <kamathvasudev@gmail.com>  Wed, 19 Jun 2013 21:44:47 +0530
-
