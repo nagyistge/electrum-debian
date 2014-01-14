@@ -244,11 +244,13 @@ class Interface(threading.Thread):
         t1 = time.time()
 
         data = []
+        ids = []
         for m in messages:
             method, params = m
             if type(params) != type([]): params = [params]
             data.append( { 'method':method, 'id':self.message_id, 'params':params } )
             self.unanswered_requests[self.message_id] = method, params, callback
+            ids.append(self.message_id)
             self.message_id += 1
 
         if data:
@@ -291,6 +293,7 @@ class Interface(threading.Thread):
 
         self.rtime = time.time() - t1
         self.is_connected = True
+        return ids
 
 
 
@@ -315,7 +318,13 @@ class Interface(threading.Thread):
                 is_new = True
                 # get server certificate.
                 # Do not use ssl.get_server_certificate because it does not work with proxy
-                for res in socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM):
+                try:
+                    l = socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM)
+                except socket.gaierror:
+                    print_error("error: cannot resolve", self.host)
+                    return
+
+                for res in l:
                     try:
                         s = socket.socket( res[0], socket.SOCK_STREAM )
                         s.connect(res[4])
@@ -346,7 +355,13 @@ class Interface(threading.Thread):
             else:
                 is_new = False
 
-        for res in socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM):
+        try:
+            addrinfo = socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        except socket.gaierror:
+            print_error("error: cannot resolve", self.host)
+            return
+
+        for res in addrinfo:
             try:
                 s = socket.socket( res[0], socket.SOCK_STREAM )
                 s.settimeout(2)
@@ -549,6 +564,8 @@ class Interface(threading.Thread):
         if self.is_connected and self.protocol in 'st' and self.s:
             self.s.shutdown(socket.SHUT_RDWR)
             self.s.close()
+
+        self.is_connected = False
 
 
     def is_up_to_date(self):

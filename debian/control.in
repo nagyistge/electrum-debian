@@ -5,7 +5,7 @@ Maintainer: Debian Bitcoin Packaging Team <pkg-bitcoin-devel@lists.alioth.debian
 Uploaders: Vasudev Kamath <kamathvasudev@gmail.com>,
  Tristan Seligmann <mithrandi@debian.org>
 Build-Depends: @cdbs@
-Standards-Version: 3.9.4
+Standards-Version: 3.9.5
 Homepage: http://electrum.org/
 Vcs-Git: git://anonscm.debian.org/pkg-bitcoin/electrum.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-bitcoin/electrum.git

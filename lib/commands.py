@@ -67,7 +67,8 @@ register_command('dumpprivkeys',         0, 0, False, True,  True,  'dump all pr
 register_command('freeze',               1, 1, False, True,  True,  'Freeze the funds at one of your wallet\'s addresses', 'freeze <address>')
 register_command('getbalance',           0, 1, True,  True,  False, 'Return the balance of your wallet, or of one account in your wallet', 'getbalance [<account>]')
 register_command('getservers',           0, 0, True,  False, False, 'Return the list of available servers')
-register_command('getaddressbalance',    1, 1, True,  True,  False, 'Return the balance of an address', 'getbalance <address>')
+register_command('getversion',           0, 0, False,  False,  False, 'Return the version of your client', 'getversion')
+register_command('getaddressbalance',    1, 1, True,  True,  False, 'Return the balance of an address', 'getaddressbalance <address>')
 register_command('getaddresshistory',    1, 1, True,  True,  False, 'Return the transaction history of a wallet address', 'getaddresshistory <address>')
 register_command('getconfig',            1, 1, False, False, False, 'Return a configuration variable', 'getconfig <name>')
 register_command('getpubkeys',           1, 1, False, True,  False, 'Return the public keys for a wallet address', 'getpubkeys <bitcoin address>')
@@ -148,8 +149,7 @@ class Commands:
 
     def sendrawtransaction(self, raw):
         tx = Transaction(raw)
-        r, h = self.wallet.sendtx( tx )
-        return h
+        return self.network.synchronous_get([('blockchain.transaction.broadcast', [str(tx)])])[0]
 
     def createmultisig(self, num, pubkeys):
         assert isinstance(pubkeys, list)
@@ -207,6 +207,10 @@ class Commands:
     def getservers(self):
         return self.network.get_servers()
 
+    def getversion(self):
+        import electrum 
+        return electrum.ELECTRUM_VERSION
+ 
     def getmpk(self):
         return self.wallet.get_master_public_key()
 
