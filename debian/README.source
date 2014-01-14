@@ -9,3 +9,17 @@ More info here: http://wiki.debian.org/CDBS+git-buildpackage
 
 
  -- Vasudev Kamath <kamathvasudev@gmail.com>, Sat, 11 Jan 2014 22:25:45 +0530
+
+
+Translations
+------------
+
+The file debian/electrum-translations.zip is retrieved from upstream's
+translations management site; the URL is:
+
+    http://crowdin.net/download/project/electrum.zip
+
+Currently updating this is a manual process.
+
+ -- Tristan Seligmann <mithrandi@debian.org>  Wed, 15 Jan 2014 01:43:30 +0200
+
