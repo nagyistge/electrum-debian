@@ -11,8 +11,8 @@ DEB_UPSTREAM_PACKAGE = Electrum
 DEB_UPSTREAM_TARBALL_BASENAME = ${DEB_UPSTREAM_PACKAGE}-${DEB_UPSTREAM_VERSION}
 DEB_UPSTREAM_TARBALL_EXTENSION = tar.gz
 
-DEB_UPSTREAM_URL = http://download.electrum.org/download
-DEB_UPSTREAM_TARBALL_MD5 = 5764f38d6e4bc287a577c8d16e797882
+DEB_UPSTREAM_URL = https://download.electrum.org
+DEB_UPSTREAM_TARBALL_MD5 = e3918fec0254267f08e41a1fb8691382
 
 package = electrum
 python_module = python-$(package)
