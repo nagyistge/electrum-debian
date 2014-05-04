@@ -12,7 +12,6 @@ mki18n.py
 setup-release.py
 setup.py
 test.py
-test2.py
 Electrum.egg-info/PKG-INFO
 Electrum.egg-info/SOURCES.txt
 Electrum.egg-info/dependency_links.txt
@@ -23,7 +22,6 @@ data/README
 data/noface.svg
 data/cleanlook/name.cfg
 data/cleanlook/style.css
-data/dark/background.png
 data/dark/name.cfg
 data/dark/style.css
 data/sahara/name.cfg
@@ -71,6 +69,7 @@ icons/clock3.png
 icons/clock4.png
 icons/clock5.png
 icons/confirmed.png
+icons/dark_background.png
 icons/electrum.ico
 icons/electrum.png
 icons/electrum_dark_icon.png
@@ -98,6 +97,7 @@ lib/bitcoin.py
 lib/blockchain.py
 lib/bmp.py
 lib/commands.py
+lib/daemon.py
 lib/i18n.py
 lib/icons_rc.py
 lib/interface.py
@@ -115,7 +115,6 @@ lib/verifier.py
 lib/version.py
 lib/wallet.py
 lib/wallet_bitkey.py
-lib/wallet_factory.py
 locale/ar_SA/LC_MESSAGES/electrum.mo
 locale/cs_CZ/LC_MESSAGES/electrum.mo
 locale/de_DE/LC_MESSAGES/electrum.mo
@@ -134,6 +133,7 @@ locale/pt_BR/LC_MESSAGES/electrum.mo
 locale/pt_PT/LC_MESSAGES/electrum.mo
 locale/ro_RO/LC_MESSAGES/electrum.mo
 locale/ru_RU/LC_MESSAGES/electrum.mo
+locale/sk_SK/LC_MESSAGES/electrum.mo
 locale/sl_SI/LC_MESSAGES/electrum.mo
 locale/ta_IN/LC_MESSAGES/electrum.mo
 locale/th_TH/LC_MESSAGES/electrum.mo
@@ -147,7 +147,6 @@ plugins/labels.py
 plugins/pointofsale.py
 plugins/qrscanner.py
 plugins/virtualkeyboard.py
-scripts/#peers#
 scripts/block_headers
 scripts/get_balance
 scripts/get_history
