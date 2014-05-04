@@ -1,11 +1,11 @@
-electrum (1.9.8-1) UNRELEASED; urgency=medium
+electrum (1.9.8-1) unstable; urgency=medium
 
   * New upstream release.
   * Update translations patch and translations.
   * Install upstream changelog.
   * Enable PGP signature checking in uscan.
 
- -- Tristan Seligmann <mithrandi@debian.org>  Sun, 04 May 2014 09:50:34 +0200
+ -- Tristan Seligmann <mithrandi@debian.org>  Sun, 04 May 2014 10:30:45 +0200
 
 electrum (1.9.7-1) unstable; urgency=medium
 
