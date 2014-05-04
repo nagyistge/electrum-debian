@@ -17,7 +17,7 @@ Translations
 The file debian/electrum-translations.zip is retrieved from upstream's
 translations management site; the URL is:
 
-    http://crowdin.net/download/project/electrum.zip
+    https://crowdin.net/download/project/electrum.zip
 
 Currently updating this is a manual process.
 
