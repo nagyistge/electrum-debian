@@ -3,6 +3,7 @@ electrum (1.9.8-1) UNRELEASED; urgency=medium
   * New upstream release.
   * Update translations patch and translations.
   * Install upstream changelog.
+  * Enable PGP signature checking in uscan.
 
  -- Tristan Seligmann <mithrandi@debian.org>  Sun, 04 May 2014 09:50:34 +0200
 
