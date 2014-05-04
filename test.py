@@ -1,16 +1,17 @@
-#!/usr/bin/env python
 
-# A simple script that connects to a server and displays block headers
+import sys, signal, time
 
-import time, electrum
+running = True
 
-print electrum.mnemonic.mn_encode("4f73f3f710030baed39cf7d1")
-print electrum.mnemonic.mn_encode("4f73f3f710030baed39cf7d15")
+def handler(signum = None, frame = None):
+    global running
+    print 'Signal handler called with signal', signum
+    running = False
 
-print "on creation"
-print electrum.mnemonic.mn_decode("soar afternoon child funny been behind any smile freeze voice coffee bee".split())
+for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
+    signal.signal(sig, handler)
 
-print "after encryption"
-print "4f73f3f710030baed39cf7d15"
+while running:
+    time.sleep(6)
+print "done"
 
-#-> the original seed was not well written.

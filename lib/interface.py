@@ -427,7 +427,9 @@ class Interface(threading.Thread):
                 except ssl.SSLError:
                     timeout = True
                 except socket.error, err:
-                    if err.errno in [11, 10035]:
+                    if err.errno == 60:
+                        timeout = True
+                    elif err.errno in [11, 10035]:
                         print_error("socket errno", err.errno)
                         time.sleep(0.1)
                         continue
@@ -595,6 +597,22 @@ class Interface(threading.Thread):
         #print "change status", self.server, self.is_connected
         self.queue.put(self)
 
+
+    def synchronous_get(self, requests, timeout=100000000):
+        queue = Queue.Queue()
+        ids = self.send(requests, lambda i,r: queue.put(r))
+        id2 = ids[:]
+        res = {}
+        while ids:
+            r = queue.get(True, timeout)
+            _id = r.get('id')
+            if _id in ids:
+                ids.remove(_id)
+                res[_id] = r.get('result')
+        out = []
+        for _id in id2:
+            out.append(res[_id])
+        return out
 
 
 if __name__ == "__main__":
