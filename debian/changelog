@@ -1,9 +1,9 @@
-electrum (1.9.8-2) UNRELEASED; urgency=medium
+electrum (1.9.8-2) unstable; urgency=medium
 
   * Update / fix package description.
     - Thanks to Duncan de Wet for the updated description.
 
- -- Tristan Seligmann <mithrandi@debian.org>  Fri, 22 Aug 2014 03:03:10 +0200
+ -- Tristan Seligmann <mithrandi@debian.org>  Sun, 05 Oct 2014 03:09:37 +0200
 
 electrum (1.9.8-1) unstable; urgency=medium
 
