@@ -26,7 +26,7 @@ Architecture: all
 Depends: ${misc:Depends},
  ${python:Depends},
  ${cdbs:Depends}
-Description: Easy to use bitcoin client - python module
+Description: Easy to use bitcoin client - Python module
  This package provides a lightweight Bitcoin client which protects
  you from losing your bitcoins in a backup mistake or computer
  failure. Also, Electrum does not require waiting time because it does
