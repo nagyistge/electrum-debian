@@ -2,6 +2,8 @@ electrum (1.9.8-3) UNRELEASED; urgency=medium
 
   * Backport upstream change to use PROTOCOL_SSL23 instead of
     PROTOCOL_SSL3 which was removed in python 2.7.8-12.
+  * Make some additional description fixes.
+    - Thanks to Carlo Stemberger this time.
 
  -- Tristan Seligmann <mithrandi@debian.org>  Sun, 23 Nov 2014 09:55:10 +0200
 

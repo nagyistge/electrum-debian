@@ -26,14 +26,14 @@ Architecture: all
 Depends: ${misc:Depends},
  ${python:Depends},
  ${cdbs:Depends}
-Description: Easy to use bitcoin client - Python module
+Description: Easy to use Bitcoin client - Python module
  This package provides a lightweight Bitcoin client which protects
  you from losing your bitcoins in a backup mistake or computer
  failure. Also, Electrum does not require waiting time because it does
  not download the Bitcoin blockchain.
  .
- This package provides electrum Python module which can be used to
- access bitcoin wallet from Python programs.
+ This package provides the "electrum" Python module which can be used to access
+ a Bitcoin wallet from Python programs.
 
 Package: electrum
 Architecture: all
@@ -54,7 +54,7 @@ Description: Easy to use bitcoin client
    * Safe: Your seed and private keys are encrypted on your hard drive.
      They are never sent to the servers.
    * Low trust: Information received from the servers is verified using
-     SPV. Servers are authenticated using SSL
+     SPV. Servers are authenticated using SSL.
    * No downtimes: Your client is not tied to a particular server; it
      will switch instantly if your server is down.
    * Ubiquitous: You can use the same wallet on different computers, they
@@ -63,5 +63,5 @@ Description: Easy to use bitcoin client
      offline. Broadcast them using a machine that does not have your keys.
    * Reachable: You can export your private keys into other Bitcoin
      clients.
-    * Established: Electrum is open source and was first released in
-      November 2011.
+   * Established: Electrum is open source and was first released in
+     November 2011.
