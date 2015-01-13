@@ -1,0 +1,24 @@
+Description: Fix Qt usage
+ Fix an issue where the wallet creation / restoration wizard would not work
+ properly on Qt 4.11 or higher.
+Author: ThomasV
+Origin: upstream, https://github.com/spesmilo/electrum/commit/fde5dd577a221aa3c5c159b885caa3aa653b7d9c
+Bug: https://github.com/spesmilo/electrum/issues/849
+Bug-Debian: https://bugs.debian.org/764138
+Applied-Upstream: fde5dd577a221aa3c5c159b885caa3aa653b7d9c
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: electrum/gui/qt/installwizard.py
+===================================================================
+--- electrum.orig/gui/qt/installwizard.py	2014-05-04 10:38:01.524676062 +0200
++++ electrum/gui/qt/installwizard.py	2015-01-13 13:22:57.566593548 +0200
+@@ -31,7 +31,8 @@
+     def set_layout(self, layout):
+         w = QWidget()
+         w.setLayout(layout)
+-        self.stack.setCurrentIndex(self.stack.addWidget(w))
++        self.stack.addWidget(w)
++        self.stack.setCurrentWidget(w)
+ 
+ 
+     def restore_or_create(self):

@@ -1,3 +1,10 @@
+electrum (1.9.8-4) unstable; urgency=medium
+
+  [ Tristan Seligmann ]
+  * Backport upstream patch fixing wallet wizard (closes: #764138).
+
+ -- Tristan Seligmann <mithrandi@debian.org>  Tue, 13 Jan 2015 13:29:08 +0200
+
 electrum (1.9.8-3) unstable; urgency=medium
 
   * Backport upstream change to use PROTOCOL_SSL23 instead of
