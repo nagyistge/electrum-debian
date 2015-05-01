@@ -1,4 +1,1 @@
-usr/bin/electrum
-usr/share/applications/electrum.desktop
-usr/share/pixmaps/electrum.png
 docs/*	usr/share/doc/electrum

@@ -3,11 +3,10 @@ Priority: optional
 Section: utils
 Maintainer: Debian Bitcoin Packaging Team <pkg-bitcoin-devel@lists.alioth.debian.org>
 Uploaders: Tristan Seligmann <mithrandi@debian.org>
-Build-Depends: cdbs (>= 0.4.106~),
- debhelper,
- dh-buildinfo,
+Build-Depends: debhelper (>= 9),
  devscripts,
  python,
+ dh-python,
  python-ecdsa (>= 0.9~),
  python-slowaes,
  python-qt4,
@@ -23,8 +22,7 @@ Package: python-electrum
 Section: python
 Architecture: all
 Depends: ${misc:Depends},
- ${python:Depends},
- ${cdbs:Depends}
+ ${python:Depends}
 Description: Easy to use Bitcoin client - Python module
  This package provides a lightweight Bitcoin client which protects
  you from losing your bitcoins in a backup mistake or computer
@@ -37,7 +35,6 @@ Description: Easy to use Bitcoin client - Python module
 Package: electrum
 Architecture: all
 Depends: ${misc:Depends},
- ${cdbs:Depends},
  python-electrum (= ${binary:Version})
 Description: Easy to use Bitcoin client
  This package provides a lightweight Bitcoin client which protects
