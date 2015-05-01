@@ -24,16 +24,16 @@ import gi
 gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gdk, GObject, cairo
 from decimal import Decimal
-from electrum.util import print_error
+from electrum.util import print_error, InvalidPassword
 from electrum.bitcoin import is_valid
-from electrum import mnemonic, pyqrnative, WalletStorage, Wallet
+from electrum import WalletStorage, Wallet
 
 Gdk.threads_init()
 APP_NAME = "Electrum"
 import platform
 MONOSPACE_FONT = 'Lucida Console' if platform.system() == 'Windows' else 'monospace'
 
-from electrum.util import format_satoshis
+from electrum.util import format_satoshis, parse_URI
 from electrum.network import DEFAULT_SERVERS
 from electrum.bitcoin import MIN_RELAY_TX_FEE
 
@@ -62,20 +62,16 @@ def numbify(entry, is_int = False):
 
 
 
-def show_seed_dialog(wallet, password, parent):
-    if not wallet.seed:
+def show_seed_dialog(seed, parent):
+    if not seed:
         show_message("No seed")
         return
-    try:
-        mnemonic = wallet.get_mnemonic(password)
-    except Exception:
-        show_message("Incorrect password")
-        return
+
     dialog = Gtk.MessageDialog(
         parent = parent,
         flags = Gtk.DialogFlags.MODAL, 
         buttons = Gtk.ButtonsType.OK, 
-        message_format = "Your wallet generation seed is:\n\n" + '"' + mnemonic + '"'\
+        message_format = "Your wallet generation seed is:\n\n" + '"' + seed + '"'\
             + "\n\nPlease keep it in a safe place; if you lose it, you will not be able to restore your wallet.\n\n" )
     dialog.set_title("Seed")
     dialog.show()
@@ -87,7 +83,7 @@ def restore_create_dialog():
     # ask if the user wants to create a new wallet, or recover from a seed. 
     # if he wants to recover, and nothing is found, do not create wallet
     dialog = Gtk.Dialog("electrum", parent=None, 
-                        flags=Gtk.DialogFlags.MODAL|Gtk.DialogFlags.NO_SEPARATOR, 
+                        flags=Gtk.DialogFlags.MODAL,
                         buttons= ("create", 0, "restore",1, "cancel",2)  )
 
     label = Gtk.Label("Wallet file not found.\nDo you want to create a new wallet,\n or to restore an existing one?"  )
@@ -135,16 +131,11 @@ def run_recovery_dialog():
     if r==Gtk.ResponseType.CANCEL:
         return False
 
-    try:
-        seed.decode('hex')
-    except Exception:
-        print_error("Warning: Not hex, trying decode")
-        seed = mnemonic.mn_decode( seed.split(' ') )
-    if not seed:
-        show_message("no seed")
-        return False
-        
-    return seed
+    if Wallet.is_seed(seed):
+        return seed
+
+    show_message("no seed")
+    return False
 
 
 
@@ -173,7 +164,7 @@ def run_settings_dialog(self):
     fee_label.set_size_request(150,10)
     fee_label.show()
     fee.pack_start(fee_label,False, False, 10)
-    fee_entry.set_text( str( Decimal(self.wallet.fee) /100000000 ) )
+    fee_entry.set_text( str( Decimal(self.wallet.fee_per_kb) /100000000 ) )
     fee_entry.connect('changed', numbify, False)
     fee_entry.show()
     fee.pack_start(fee_entry,False,False, 10)
@@ -229,19 +220,16 @@ def run_settings_dialog(self):
 def run_network_dialog( network, parent ):
     image = Gtk.Image()
     image.set_from_stock(Gtk.STOCK_NETWORK, Gtk.IconSize.DIALOG)
+    host, port, protocol, proxy_config, auto_connect = network.get_parameters()
+    server = "%s:%s:%s"%(host, port, protocol)
     if parent:
         if network.is_connected():
-            interface = network.interface
-            status = "Connected to %s:%d\n%d blocks"%(interface.host, interface.port, network.blockchain.height())
+            status = "Connected to %s\n%d blocks"%(host, network.get_local_height())
         else:
             status = "Not connected"
     else:
         import random
         status = "Please choose a server.\nSelect cancel if you are offline."
-
-    if network.is_connected():
-        server = interface.server
-        host, port, protocol = server.split(':')
 
     servers = network.get_servers()
 
@@ -311,7 +299,7 @@ def run_network_dialog( network, parent ):
     treeview = Gtk.TreeView(model=server_list)
     treeview.show()
 
-    label = 'Active Servers' if network.irc_servers else 'Default Servers'
+    label = 'Active Servers' if network.is_connected() else 'Default Servers'
     tvcolumn = Gtk.TreeViewColumn(label)
     treeview.append_column(tvcolumn)
     cell = Gtk.CellRendererText()
@@ -353,12 +341,11 @@ def run_network_dialog( network, parent ):
 
     try:
         host, port, protocol = server.split(':')
-        proxy = network.config.get('proxy')
-        auto_connect = network.config.get('auto_cycle')
-        network.set_parameters(host, port, protocol, proxy, auto_connect)
     except Exception:
         show_message("error:" + server)
         return False
+
+    network.set_parameters(host, port, protocol, proxy_config, auto_connect)
 
 
 
@@ -452,18 +439,15 @@ def add_help_button(hbox, message):
     hbox.pack_start(button,False, False, 0)
 
 
-class MyWindow(Gtk.Window): __gsignals__ = dict( mykeypress = (GObject.SignalFlags.RUN_LAST | GObject.SignalFlags.ACTION, None, (str,)) )
-
-GObject.type_register(MyWindow)
-#FIXME: can't find docs how to create keybindings in PyGI
-#Gtk.binding_entry_add_signall(MyWindow, Gdk.KEY_W, Gdk.ModifierType.CONTROL_MASK, 'mykeypress', ['ctrl+W'])
-#Gtk.binding_entry_add_signall(MyWindow, Gdk.KEY_Q, Gdk.ModifierType.CONTROL_MASK, 'mykeypress', ['ctrl+Q'])
-
-
 class ElectrumWindow:
 
     def show_message(self, msg):
         show_message(msg, self.window)
+
+    def on_key(self, w, event):
+        if Gdk.ModifierType.CONTROL_MASK & event.state and event.keyval in [113,119]:
+            Gtk.main_quit()
+        return True
 
     def __init__(self, wallet, config, network):
         self.config = config
@@ -471,16 +455,19 @@ class ElectrumWindow:
         self.network = network
         self.funds_error = False # True if not enough funds
         self.num_zeros = int(self.config.get('num_zeros',0))
-
-        self.window = MyWindow(Gtk.WindowType.TOPLEVEL)
+        self.window = Gtk.Window(Gtk.WindowType.TOPLEVEL)
+        self.window.connect('key-press-event', self.on_key)
         title = 'Electrum ' + self.wallet.electrum_version + '  -  ' + self.config.path
         if not self.wallet.seed: title += ' [seedless]'
         self.window.set_title(title)
         self.window.connect("destroy", Gtk.main_quit)
         self.window.set_border_width(0)
-        self.window.connect('mykeypress', Gtk.main_quit)
+        #self.window.connect('mykeypress', Gtk.main_quit)
         self.window.set_default_size(720, 350)
         self.wallet_updated = False
+
+        from electrum.util import StoreDict
+        self.contacts = StoreDict(self.config, 'contacts')
 
         vbox = Gtk.VBox()
 
@@ -515,7 +502,8 @@ class ElectrumWindow:
                     password = password_dialog(self.window)
                     if not password: return
                 else: password = None
-                show_seed_dialog(wallet, password, self.window)
+                seed = wallet.get_mnemonic(password)
+                show_seed_dialog(seed, self.window)
             button = Gtk.Button('S')
             button.connect("clicked", seedb, self.wallet )
             button.set_relief(Gtk.ReliefStyle.NONE)
@@ -611,7 +599,7 @@ class ElectrumWindow:
 
             try:
                 wallet.get_seed(password)
-            except Exception:
+            except InvalidPassword:
                 show_message("Incorrect password")
                 return
 
@@ -695,18 +683,22 @@ class ElectrumWindow:
         self.user_fee = False
 
         def entry_changed( entry, is_fee ):
-            self.funds_error = False
             amount = numbify(amount_entry)
             fee = numbify(fee_entry)
             if not is_fee: fee = None
             if amount is None:
                 return
-            #assume two outputs - one for change
-            inputs, total, fee = self.wallet.choose_tx_inputs( amount, fee, 2 )
-            if not is_fee:
-                fee_entry.set_text( str( Decimal( fee ) / 100000000 ) )
-                self.fee_box.show()
-            if inputs:
+            try:
+                tx = self.wallet.make_unsigned_transaction([('op_return', 'dummy_tx', amount)], fee)
+                self.funds_error = False
+            except NotEnoughFunds:
+                self.funds_error = True
+
+            if not self.funds_error:
+                if not is_fee:
+                    fee = tx.get_fee()
+                    fee_entry.set_text( str( Decimal( fee ) / 100000000 ) )
+                    self.fee_box.show()
                 amount_entry.modify_text(Gtk.StateType.NORMAL, Gdk.color_parse("#000000"))
                 fee_entry.modify_text(Gtk.StateType.NORMAL, Gdk.color_parse("#000000"))
                 send_button.set_sensitive(True)
@@ -714,7 +706,6 @@ class ElectrumWindow:
                 send_button.set_sensitive(False)
                 amount_entry.modify_text(Gtk.StateType.NORMAL, Gdk.color_parse("#cc0000"))
                 fee_entry.modify_text(Gtk.StateType.NORMAL, Gdk.color_parse("#cc0000"))
-                self.funds_error = True
 
         amount_entry.connect('changed', entry_changed, False)
         fee_entry.connect('changed', entry_changed, True)        
@@ -738,18 +729,12 @@ class ElectrumWindow:
             entry.modify_base(Gtk.StateType.NORMAL, Gdk.color_parse("#ffffff"))
 
     def set_url(self, url):
-        payto, amount, label, message, signature, identity, url = self.wallet.parse_url(url, self.show_message, self.question)
+        payto, amount, label, message, payment_request = parse_URI(url)
         self.notebook.set_current_page(1)
         self.payto_entry.set_text(payto)
         self.message_entry.set_text(message)
         self.amount_entry.set_text(amount)
-        if identity:
-            self.set_frozen(self.payto_entry,True)
-            self.set_frozen(self.amount_entry,True)
-            self.set_frozen(self.message_entry,True)
-            self.payto_sig_id.set_text( '      The bitcoin URI was signed by ' + identity )
-        else:
-            self.payto_sig.set_visible(False)
+        self.payto_sig.set_visible(False)
 
     def create_about_tab(self):
         from gi.repository import Pango
@@ -1033,14 +1018,15 @@ class ElectrumWindow:
             hbox.pack_start(button,False, False, 0)
 
         def showqrcode(w, treeview, liststore):
+            import qrcode
             path, col = treeview.get_cursor()
             if not path: return
             address = liststore.get_value(liststore.get_iter(path), 0)
-            qr = pyqrnative.QRCode(4, pyqrnative.QRErrorCorrectLevel.H)
-            qr.addData(address)
-            qr.make()
+            qr = qrcode.QRCode()
+            qr.add_data(address)
             boxsize = 7
-            boxcount_row = qr.getModuleCount()
+            matrix = qr.get_matrix()
+            boxcount_row = len(matrix)
             size = (boxcount_row + 4) * boxsize
             def area_expose_cb(area, cr):
                 style = area.get_style()
@@ -1050,7 +1036,7 @@ class ElectrumWindow:
                 Gdk.cairo_set_source_color(cr, style.black)
                 for r in range(boxcount_row):
                     for c in range(boxcount_row):
-                        if qr.isDark(r, c):
+                        if matrix[r][c]:
                             cr.rectangle((c + 2) * boxsize, (r + 2) * boxsize, boxsize, boxsize)
                             cr.fill()
             area = Gtk.DrawingArea()
@@ -1123,17 +1109,19 @@ class ElectrumWindow:
         return vbox
 
     def update_status_bar(self):
-        interface = self.network.interface
+
         if self.funds_error:
             text = "Not enough funds"
-        elif interface and interface.is_connected:
-            self.network_button.set_tooltip_text("Connected to %s:%d.\n%d blocks"%(interface.host, interface.port, self.network.blockchain.height()))
+        elif self.network.is_connected():
+            host, port, _,_,_ = self.network.get_parameters()
+            port = int(port)
+            height = self.network.get_local_height()
+            self.network_button.set_tooltip_text("Connected to %s:%d.\n%d blocks"%(host, port, height))
             if not self.wallet.up_to_date:
                 self.status_image.set_from_stock(Gtk.STOCK_REFRESH, Gtk.IconSize.MENU)
                 text = "Synchronizing..."
             else:
                 self.status_image.set_from_stock(Gtk.STOCK_YES, Gtk.IconSize.MENU)
-                self.network_button.set_tooltip_text("Connected to %s:%d.\n%d blocks"%(interface.host, interface.port, self.network.blockchain.height()))
                 c, u = self.wallet.get_balance()
                 text =  "Balance: %s "%( format_satoshis(c,False,self.num_zeros) )
                 if u: text +=  "[%s unconfirmed]"%( format_satoshis(u,True,self.num_zeros).strip() )
@@ -1169,24 +1157,17 @@ class ElectrumWindow:
             self.recv_list.append((address, label, tx, format_satoshis(c,False,self.num_zeros), Type ))
 
     def update_sending_tab(self):
-        # detect addresses that are not mine in history, add them here...
         self.addressbook_list.clear()
-        #for alias, v in self.wallet.aliases.items():
-        #    s, target = v
-        #    label = self.wallet.labels.get(alias)
-        #    self.addressbook_list.append((alias, label, '-'))
-            
-        for address in self.wallet.addressbook:
-            label = self.wallet.labels.get(address)
-            n = self.wallet.get_num_tx(address)
-            self.addressbook_list.append((address, label, "%d"%n))
+        for k, v in self.contacts.items():
+            t, v = v
+            self.addressbook_list.append((k, v, t))
 
     def update_history_tab(self):
         cursor = self.history_treeview.get_cursor()[0]
         self.history_list.clear()
 
-        for item in self.wallet.get_tx_history():
-            tx_hash, conf, is_mine, value, fee, balance, timestamp = item
+        for item in self.wallet.get_history():
+            tx_hash, conf, value, timestamp, balance = item
             if conf > 0:
                 try:
                     time_str = datetime.datetime.fromtimestamp( timestamp).isoformat(' ')[:-3]
@@ -1214,7 +1195,8 @@ class ElectrumWindow:
         import datetime
         if not tx_hash: return ''
         tx = self.wallet.transactions.get(tx_hash)
-        is_relevant, is_mine, v, fee = self.wallet.get_tx_value(tx)
+        tx.deserialize()
+        is_relevant, is_mine, v, fee = self.wallet.get_wallet_delta(tx)
         conf, timestamp = self.wallet.verifier.get_confirmations(tx_hash)
 
         if timestamp:
@@ -1223,7 +1205,7 @@ class ElectrumWindow:
             time_str = 'pending'
 
         inputs = map(lambda x: x.get('address'), tx.inputs)
-        outputs = map(lambda x: x.get('address'), tx.d['outputs'])
+        outputs = map(lambda x: x[0], tx.get_outputs())
         tx_details = "Transaction Details" +"\n\n" \
             + "Transaction ID:\n" + tx_hash + "\n\n" \
             + "Status: %d confirmations\n"%conf
@@ -1282,7 +1264,7 @@ class ElectrumWindow:
 
         if result == 1:
             if is_valid(address):
-                self.wallet.add_contact(address,label)
+                self.contacts[label] = address
                 self.update_sending_tab()
             else:
                 errorDialog = Gtk.MessageDialog(
@@ -1316,21 +1298,25 @@ class ElectrumGui():
                 wallet.gap_limit = gap
                 wallet.storage.put('gap_limit', gap, True)
 
-
             if action == 'create':
-                wallet.init_seed(None)
-                show_seed_dialog(wallet, None, None)
+                seed = wallet.make_seed()
+                show_seed_dialog(seed, None)
                 r = change_password_dialog(False, None)
                 password = r[2] if r else None
-                wallet.save_seed(password)
+                wallet.add_seed(seed, password)
+                wallet.create_master_keys(password)
+                wallet.create_main_account(password)
                 wallet.synchronize()  # generate first addresses offline
 
             elif action == 'restore':
                 seed = self.seed_dialog()
-                wallet.init_seed(seed)
+                if not seed:
+                    exit()
                 r = change_password_dialog(False, None)
                 password = r[2] if r else None
-                wallet.save_seed(password)
+                wallet.add_seed(seed, password)
+                wallet.create_master_keys(password)
+                wallet.create_main_account(password)
                 
             else:
                 exit()

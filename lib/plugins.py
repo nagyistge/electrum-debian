@@ -6,11 +6,11 @@ from i18n import _
 plugins = []
 
 
-def init_plugins(self):
+def init_plugins(config, local):
     import imp, pkgutil, __builtin__, os
     global plugins
 
-    if __builtin__.use_local_modules:
+    if local:
         fp, pathname, description = imp.find_module('plugins')
         plugin_names = [name for a, name, b in pkgutil.iter_modules([pathname])]
         plugin_names = filter( lambda name: os.path.exists(os.path.join(pathname,name+'.py')), plugin_names)
@@ -23,45 +23,69 @@ def init_plugins(self):
 
     for name, p in zip(plugin_names, plugin_modules):
         try:
-            plugins.append( p.Plugin(self, name) )
+            plugins.append( p.Plugin(config, name) )
         except Exception:
             print_msg(_("Error: cannot initialize plugin"),p)
             traceback.print_exc(file=sys.stdout)
 
 
+hook_names = set()
+hooks = {}
+
+def hook(func):
+    hook_names.add(func.func_name)
+    return func
 
 def run_hook(name, *args):
-    
-    global plugins
+    return _run_hook(name, False, *args)
 
-    for p in plugins:
+def always_hook(name, *args):
+    return _run_hook(name, True, *args)
 
-        if not p.is_enabled():
-            continue
+def _run_hook(name, always, *args):
+    results = []
+    f_list = hooks.get(name, [])
+    for p, f in f_list:
+        if name == 'load_wallet':
+            p.wallet = args[0]
+        if name == 'init_qt':
+            gui = args[0]
+            p.window = gui.main_window
+        if always or p.is_enabled():
+            try:
+                r = f(*args)
+            except Exception:
+                print_error("Plugin error")
+                traceback.print_exc(file=sys.stdout)
+                r = False
+            if r:
+                results.append(r)
+        if name == 'close_wallet':
+            p.wallet = None
 
-        f = getattr(p, name, None)
-        if not callable(f):
-            continue
-
-        try:
-            f(*args)
-        except Exception:
-            print_error("Plugin error")
-            traceback.print_exc(file=sys.stdout)
-            
-    return
-
+    if results:
+        assert len(results) == 1, results
+        return results[0]
 
 
 class BasePlugin:
 
-    def __init__(self, gui, name):
-        self.gui = gui
+    def __init__(self, config, name):
         self.name = name
-        self.config = gui.config
+        self.config = config
+        self.wallet = None
+        # add self to hooks
+        for k in dir(self):
+            if k in hook_names:
+                l = hooks.get(k, [])
+                l.append((self, getattr(self, k)))
+                hooks[k] = l
 
     def fullname(self):
         return self.name
+
+    def print_error(self, *msg):
+        print_error("[%s]"%self.name, *msg)
 
     def description(self):
         return 'undefined'
@@ -69,17 +93,6 @@ class BasePlugin:
     def requires_settings(self):
         return False
 
-    def toggle(self):
-        if self.is_enabled():
-            if self.disable():
-                self.close()
-        else:
-            if self.enable():
-                self.init()
-
-        return self.is_enabled()
-
-    
     def enable(self):
         self.set_enabled(True)
         return True
@@ -88,7 +101,15 @@ class BasePlugin:
         self.set_enabled(False)
         return True
 
-    def init(self): pass
+    def init_qt(self, gui): pass
+
+    @hook
+    def load_wallet(self, wallet): pass
+
+    @hook
+    def close_wallet(self): pass
+
+    #def init(self): pass
 
     def close(self): pass
 
