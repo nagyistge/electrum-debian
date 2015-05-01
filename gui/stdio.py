@@ -1,8 +1,8 @@
 from decimal import Decimal
 _ = lambda x:x
 #from i18n import _
-from electrum import mnemonic_encode, WalletStorage, Wallet
-from electrum.util import format_satoshis, set_verbosity
+from electrum.wallet import WalletStorage, Wallet
+from electrum.util import format_satoshis, set_verbosity, StoreDict
 from electrum.bitcoin import is_valid
 from electrum.network import filter_protocol
 import sys, getpass, datetime
@@ -20,7 +20,7 @@ class ElectrumGui:
             print "Wallet not found. try 'electrum create'"
             exit()
 
-	self.done = 0
+        self.done = 0
         self.last_balance = ""
 
         set_verbosity(False)
@@ -32,6 +32,7 @@ class ElectrumGui:
 
         self.wallet = Wallet(storage)
         self.wallet.start_threads(network)
+        self.contacts = StoreDict(self.config, 'contacts')
         
         self.wallet.network.register_callback('updated', self.updated)
         self.wallet.network.register_callback('connected', self.connected)
@@ -99,11 +100,11 @@ class ElectrumGui:
         b = 0 
         messages = []
 
-        for item in self.wallet.get_tx_history():
-            tx_hash, confirmations, is_mine, value, fee, balance, timestamp = item
+        for item in self.wallet.get_history():
+            tx_hash, confirmations, value, timestamp, balance = item
             if confirmations:
                 try:
-                    time_str = datetime.datetime.fromtimestamp( timestamp).isoformat(' ')[:-3]
+                    time_str = datetime.datetime.fromtimestamp(timestamp).isoformat(' ')[:-3]
                 except Exception:
                     time_str = "unknown"
             else:
@@ -119,7 +120,7 @@ class ElectrumGui:
         print(self.get_balance())
 
     def get_balance(self):
-        if self.wallet.network.interface and self.wallet.network.interface.is_connected:
+        if self.wallet.network.is_connected():
             if not self.wallet.up_to_date:
                 msg = _( "Synchronizing..." )
             else: 
@@ -133,8 +134,8 @@ class ElectrumGui:
 
 
     def print_contacts(self):
-        messages = map(lambda addr: "%30s    %30s       "%(addr, self.wallet.labels.get(addr,"")), self.wallet.addressbook)
-        self.print_list(messages, "%19s  %25s "%("Address", "Label"))
+        messages = map(lambda x: "%20s   %45s "%(x[0], x[1][1]), self.contacts.items())
+        self.print_list(messages, "%19s  %25s "%("Key", "Value"))
 
     def print_addresses(self):
         messages = map(lambda addr: "%30s    %30s       "%(addr, self.wallet.labels.get(addr,"")), self.wallet.addresses())
@@ -239,14 +240,3 @@ class ElectrumGui:
             
     def run_contacts_tab(self, c):
         pass
-#        if c == 10 and self.wallet.addressbook:
-#            out = self.run_popup('Adress', ["Copy", "Pay to", "Edit label", "Delete"]).get('button')
-#            address = self.wallet.addressbook[self.pos%len(self.wallet.addressbook)]
-#            if out == "Pay to":
-#                self.tab = 1
-#                self.str_recipient = address 
-#                self.pos = 2
-#            elif out == "Edit label":
-#                s = self.get_string(6 + self.pos, 18)
-#                if s:
-#                    self.wallet.labels[address] = s

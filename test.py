@@ -1,17 +1,9 @@
+import requests
 
-import sys, signal, time
 
-running = True
 
-def handler(signum = None, frame = None):
-    global running
-    print 'Signal handler called with signal', signum
-    running = False
-
-for sig in [signal.SIGTERM, signal.SIGINT, signal.SIGHUP, signal.SIGQUIT]:
-    signal.signal(sig, handler)
-
-while running:
-    time.sleep(6)
-print "done"
+url = 'https://www.coinbase.com'
+response = requests.request('get', url, verify='packages/requests/cacert.pem.old')
+print response
+print dir(response)
 
