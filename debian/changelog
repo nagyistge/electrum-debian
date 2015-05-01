@@ -9,6 +9,7 @@ electrum (2.1.1-1) UNRELEASED; urgency=medium
     - Remove 3001_dont_fetch_translations_from_web.patch: obsolete.
     - Remove 2001_add_tailing_semicolon.patch: merged upstream.
     - Remove 2002_dont_use_local_share.patch: obsolete.
+    - Remove 1001_use_sslv23_method.patch: merged upstream.
 
  -- Vasudev Kamath <kamathvasudev@gmail.com>  Sun, 23 Nov 2014 20:07:00 +0530
 
