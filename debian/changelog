@@ -1,6 +1,11 @@
-electrum (1.9.8-5) UNRELEASED; urgency=medium
+electrum (2.1.1-1) UNRELEASED; urgency=medium
 
+  [ Vasudev Kamath ]
   * Drop myself from uploaders.
+
+  [ Tristan Seligmann ]
+  * New upstream release.
+    - Update debian/watch.
 
  -- Vasudev Kamath <kamathvasudev@gmail.com>  Sun, 23 Nov 2014 20:07:00 +0530
 
