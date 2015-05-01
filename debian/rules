@@ -12,7 +12,7 @@ DEB_UPSTREAM_TARBALL_BASENAME = ${DEB_UPSTREAM_PACKAGE}-${DEB_UPSTREAM_VERSION}
 DEB_UPSTREAM_TARBALL_EXTENSION = tar.gz
 
 DEB_UPSTREAM_URL = https://download.electrum.org
-DEB_UPSTREAM_TARBALL_MD5 = e3918fec0254267f08e41a1fb8691382
+DEB_UPSTREAM_TARBALL_MD5 = 0041146d7e6b2c9c85a0ffc5df0f8ba7
 
 package = electrum
 python_module = python-$(package)
@@ -43,6 +43,4 @@ DEB_COPYRIGHT_CHECK_IGNORE_REGEX = ^(locale/.*/.*\.mo|data/dark/.*\.png|icons/.*
 DEB_INSTALL_CHANGELOGS_ALL=RELEASE-NOTES
 
 pre-build::
-	python mki18n.py
 	pyrcc4 icons.qrc -o gui/icons_rc.py
-
