@@ -6,6 +6,7 @@ electrum (2.1.1-1) UNRELEASED; urgency=medium
   [ Tristan Seligmann ]
   * New upstream release.
     - Update debian/watch.
+    - Remove 3001_dont_fetch_translations_from_web.patch: no longer necessary.
 
  -- Vasudev Kamath <kamathvasudev@gmail.com>  Sun, 23 Nov 2014 20:07:00 +0530
 
