@@ -115,9 +115,23 @@ class HelpLabel(QLabel):
     def __init__(self, text, help_text):
         QLabel.__init__(self, text)
         self.help_text = help_text
+        self.app = QCoreApplication.instance()
+        self.font = QFont()
 
     def mouseReleaseEvent(self, x):
         QMessageBox.information(self, 'Help', self.help_text, 'OK')
+
+    def enterEvent(self, event):
+        self.font.setUnderline(True)
+        self.setFont(self.font)
+        self.app.setOverrideCursor(QCursor(Qt.PointingHandCursor))
+        return QLabel.enterEvent(self, event)
+
+    def leaveEvent(self, event):
+        self.font.setUnderline(False)
+        self.setFont(self.font)
+        self.app.setOverrideCursor(QCursor(Qt.ArrowCursor))
+        return QLabel.leaveEvent(self, event)
 
 
 class HelpButton(QPushButton):
@@ -186,7 +200,7 @@ def text_dialog(parent, title, label, ok_label, default=None):
     l = QVBoxLayout()
     dialog.setLayout(l)
     l.addWidget(QLabel(label))
-    txt = ScanQRTextEdit(parent)
+    txt = ScanQRTextEdit()
     if default:
         txt.setText(default)
     l.addWidget(txt)
@@ -260,7 +274,7 @@ def filename_field(parent, config, defaultname, select_msg):
 
 class MyTreeWidget(QTreeWidget):
 
-    def __init__(self, parent, create_menu, headers, column_width):
+    def __init__(self, parent, create_menu, headers, stretch_column=None):
         QTreeWidget.__init__(self, parent)
         self.parent = parent
         self.setColumnCount(len(headers))
@@ -274,16 +288,12 @@ class MyTreeWidget(QTreeWidget):
         self.insertChild = self.insertTopLevelItem
         # editable column
         self.is_edit = False
-        self.edit_column = None
+        self.edit_column = stretch_column
         self.itemDoubleClicked.connect(self.edit_label)
         self.itemChanged.connect(self.label_changed)
-        # set column width
-        for i, width in enumerate(column_width):
-            if width is None:
-                self.header().setResizeMode(i, QHeaderView.Stretch)
-                self.edit_column = i
-            else:
-                self.setColumnWidth(i, width)
+        # stretch
+        for i in range(len(headers)):
+            self.header().setResizeMode(i, QHeaderView.Stretch if i == stretch_column else QHeaderView.ResizeToContents)
         self.setSortingEnabled(True)
 
     def on_activated(self, item):
@@ -306,8 +316,6 @@ class MyTreeWidget(QTreeWidget):
             text = unicode(item.text(column))
             key = str(item.data(0, Qt.UserRole).toString())
             self.is_edit = True
-            if text == self.parent.wallet.get_default_label(key):
-                item.setText(column, '')
             item.setFlags(Qt.ItemIsEditable|Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
             self.editItem(item, column)
             item.setFlags(Qt.ItemIsSelectable | Qt.ItemIsUserCheckable | Qt.ItemIsEnabled | Qt.ItemIsDragEnabled)
@@ -340,9 +348,11 @@ class MyTreeWidget(QTreeWidget):
             for x in self.get_leaves(item):
                 yield x
 
-    def filter(self, p, column):
+    def filter(self, p, columns):
+        p = unicode(p).lower()
         for item in self.get_leaves(self.invisibleRootItem()):
-            item.setHidden(unicode(item.text(column)).lower().find(p) == -1)
+            item.setHidden(all([unicode(item.text(column)).lower().find(p) == -1
+                                for column in columns]))
 
 
 class ButtonsWidget(QWidget):
@@ -373,7 +383,7 @@ class ButtonsWidget(QWidget):
     def addCopyButton(self, app):
         self.app = app
         f = lambda: self.app.clipboard().setText(str(self.text()))
-        self.addButton(":icons/copy.png", f, _("Copy to Clibboard"))
+        self.addButton(":icons/copy.png", f, _("Copy to Clipboard"))
 
 class ButtonsLineEdit(QLineEdit, ButtonsWidget):
     def __init__(self, text=None):

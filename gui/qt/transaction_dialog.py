@@ -40,7 +40,7 @@ from electrum.plugins import run_hook
 from util import *
 
 
-class TxDialog(QDialog):
+class TxDialog(QWidget):
 
     def __init__(self, tx, parent):
         self.tx = tx
@@ -49,10 +49,9 @@ class TxDialog(QDialog):
         self.wallet = parent.wallet
         self.saved = True
 
-        QDialog.__init__(self)
+        QWidget.__init__(self)
         self.setMinimumWidth(600)
         self.setWindowTitle(_("Transaction"))
-        self.setModal(1)
 
         vbox = QVBoxLayout()
         self.setLayout(vbox)
@@ -109,9 +108,11 @@ class TxDialog(QDialog):
 
     def close(self):
         if not self.saved:
-            if QMessageBox.question(self, _('Message'), _('This transaction is not saved. Close anyway?'), QMessageBox.Yes | QMessageBox.No, QMessageBox.No) == QMessageBox.No:
+            if QMessageBox.question(
+                    self, _('Message'), _('This transaction is not saved. Close anyway?'),
+                    QMessageBox.Yes | QMessageBox.No, QMessageBox.No) == QMessageBox.No:
                 return
-        self.done(0)
+        QWidget.close(self)
 
     def show_qr(self):
         text = self.tx.raw.decode('hex')
@@ -149,7 +150,7 @@ class TxDialog(QDialog):
             status = _("Signed")
 
             if tx_hash in self.wallet.transactions.keys():
-                conf, timestamp = self.wallet.verifier.get_confirmations(tx_hash)
+                conf, timestamp = self.wallet.get_confirmations(tx_hash)
                 if timestamp:
                     time_str = datetime.datetime.fromtimestamp(timestamp).isoformat(' ')[:-3]
                 else:
@@ -176,10 +177,11 @@ class TxDialog(QDialog):
         else:
             self.date_label.hide()
 
+        # cannot broadcast when offline
+        if self.parent.network is None:
+            self.broadcast_button.setEnabled(False)
+
         # if we are not synchronized, we cannot tell
-        if self.parent.network is None or not self.parent.network.is_running() or not self.parent.network.is_connected():
-            self.broadcast_button.hide()  # cannot broadcast when offline
-            return
         if not self.wallet.up_to_date:
             return
 
@@ -230,6 +232,8 @@ class TxDialog(QDialog):
                     _addr = self.wallet.find_pay_to_pubkey_address(prevout_hash, prevout_n)
                     if _addr:
                         addr = _addr
+                if addr is None:
+                    addr = _('unknown')
                 cursor.insertText(addr, own if self.wallet.is_mine(addr) else ext)
             cursor.insertBlock()
 

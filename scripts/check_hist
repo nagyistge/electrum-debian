@@ -2,7 +2,7 @@
 
 import util
 peers = util.get_peers()
-results = util.send_request(peers, {'method':'blockchain.address.get_history','params':['1ELzQwxokGTXQ7FSNFoFkWpV3ZTVPsrmDd']})
+results = util.send_request(peers, {'method':'blockchain.address.get_history','params':['1JHaKMpEB7LsZWjbHJZbzCVLndEG5G5UwZ']})
 
 for n,v in results.items():
     print "%40s"%n, v

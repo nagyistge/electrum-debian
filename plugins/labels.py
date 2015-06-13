@@ -25,14 +25,8 @@ from electrum_gui.qt.util import ThreadedButton, Buttons, CancelButton, OkButton
 
 class Plugin(BasePlugin):
 
-    target_host = 'sync.bysh.me:8080'
+    target_host = 'sync.bytesized-hosting.com:9090'
     encode_password = None
-
-    def fullname(self):
-        return _('LabelSync')
-
-    def description(self):
-        return '%s\n\n%s' % (_("The new and improved LabelSync plugin. This can sync your labels across multiple Electrum installs by using a remote database to save your data. Labels, transactions ids and addresses are encrypted before they are sent to the remote server."), _("The label sync's server software is open-source as well and can be found on github.com/maran/electrum-sync-server"))
 
     def version(self):
         return "0.0.1"
@@ -57,7 +51,7 @@ class Plugin(BasePlugin):
         self.window.connect(self.window, SIGNAL('labels:pulled'), self.on_pulled)
 
     @hook
-    def load_wallet(self, wallet):
+    def load_wallet(self, wallet, window):
         self.wallet = wallet
 
         self.wallet_nonce = self.wallet.storage.get("wallet_nonce")
@@ -140,7 +134,7 @@ class Plugin(BasePlugin):
         QMessageBox.information(None, _("Labels synchronised"), _("Your labels have been synchronised."))
 
     def do_request(self, method, url = "/labels", is_batch=False, data=None):
-        url = 'http://' + self.target_host + url
+        url = 'https://' + self.target_host + url
         kwargs = {'headers': {}}
         if method == 'GET' and data:
             kwargs['params'] = data
