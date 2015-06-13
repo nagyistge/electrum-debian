@@ -23,7 +23,7 @@ from __future__ import absolute_import
 import android
 
 from electrum import SimpleConfig, Wallet, WalletStorage, format_satoshis
-from electrum.bitcoin import is_address
+from electrum.bitcoin import is_address, COIN
 from electrum import util
 from decimal import Decimal
 import datetime, re
@@ -410,9 +410,12 @@ def update_layout():
     elif not wallet.up_to_date:
         text = "Synchronizing..."
     else:
-        c, u = wallet.get_balance()
+        c, u, x = wallet.get_balance()
         text = "Balance:"+format_satoshis(c) 
-        if u : text += '   [' + format_satoshis(u,True).strip() + ']'
+        if u:
+            text += '   [' + format_satoshis(u,True).strip() + ']'
+        if x:
+            text += '   [' + format_satoshis(x,True).strip() + ']'
 
 
     # vibrate if status changed
@@ -582,7 +585,7 @@ def payto_loop():
                     continue
 
                 try:
-                    amount = int( 100000000 * Decimal(amount) )
+                    amount = int(COIN * Decimal(amount))
                 except Exception:
                     modal_dialog('Error','Invalid amount')
                     continue
@@ -605,7 +608,7 @@ def payto_loop():
                         if re.match('^bitcoin:', data):
                             payto, amount, label, message, _ = util.parse_URI(data)
                             if amount:
-                                amount = str(amount/100000000)
+                                amount = str(amount / COIN)
                             droid.fullSetProperty("recipient", "text", payto)
                             droid.fullSetProperty("amount", "text", amount)
                             droid.fullSetProperty("message", "text", message)
@@ -659,7 +662,7 @@ def receive_loop():
         elif event["name"]=="amount":
             amount = modal_input('Amount', 'Amount you want to receive (in BTC). ', format_satoshis(receive_amount) if receive_amount else None, "numberDecimal")
             if amount is not None:
-                receive_amount = int(100000000 * Decimal(amount)) if amount else None
+                receive_amount = int(COIN * Decimal(amount)) if amount else None
                 out = 'receive'
 
         elif event["name"]=="message":
@@ -767,7 +770,7 @@ def settings_loop():
 
     def set_listview():
         host, port, p, proxy_config, auto_connect = network.get_parameters()
-        fee = str( Decimal( wallet.fee_per_kb)/100000000 )
+        fee = str(Decimal(wallet.fee_per_kb) / COIN)
         is_encrypted = 'yes' if wallet.use_encryption else 'no'
         protocol = protocol_name(p)
         droid.fullShow(settings_layout)
@@ -815,10 +818,10 @@ def settings_loop():
 
             elif pos == "3": #fee
                 fee = modal_input('Transaction fee', 'The fee will be this amount multiplied by the number of inputs in your transaction. ',
-                                  str(Decimal(wallet.fee_per_kb)/100000000 ), "numberDecimal")
+                                  str(Decimal(wallet.fee_per_kb) / COIN), "numberDecimal")
                 if fee:
                     try:
-                        fee = int( 100000000 * Decimal(fee) )
+                        fee = int(COIN * Decimal(fee))
                     except Exception:
                         modal_dialog('error','invalid fee value')
                     wallet.set_fee(fee)
@@ -904,7 +907,7 @@ class ElectrumGui:
         
         contacts = util.StoreDict(config, 'contacts')
 
-        storage = WalletStorage(config)
+        storage = WalletStorage(config.get_wallet_path())
         if not storage.file_exists:
             action = self.restore_or_create()
             if not action:

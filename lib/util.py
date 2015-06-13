@@ -2,6 +2,7 @@ import os, sys, re, json
 import platform
 import shutil
 from datetime import datetime
+from decimal import Decimal
 import urlparse
 import urllib
 import threading
@@ -104,32 +105,33 @@ def user_dir():
         #raise Exception("No home directory found in environment variables.")
         return
 
-
-
+def format_satoshis_plain(x, decimal_point = 8):
+    '''Display a satoshi amount scaled.  Always uses a '.' as a decimal
+    point and has no thousands separator'''
+    scale_factor = pow(10, decimal_point)
+    return "{:.8f}".format(Decimal(x) / scale_factor).rstrip('0').rstrip('.')
 
 def format_satoshis(x, is_diff=False, num_zeros = 0, decimal_point = 8, whitespaces=False):
-    from decimal import Decimal
+    from locale import localeconv
     if x is None:
         return 'unknown'
-    s = Decimal(x)
-    sign, digits, exp = s.as_tuple()
-    digits = map(str, digits)
-    while len(digits) < decimal_point + 1:
-        digits.insert(0,'0')
-    digits.insert(-decimal_point,'.')
-    s = ''.join(digits).rstrip('0')
-    if sign:
-        s = '-' + s
+    x = int(x)  # Some callers pass Decimal
+    scale_factor = pow (10, decimal_point)
+    integer_part = "{:n}".format(int(abs(x) / float(scale_factor)))
+    if x < 0:
+        integer_part = '-' + integer_part
     elif is_diff:
-        s = "+" + s
-
-    p = s.find('.')
-    s += "0"*( 1 + num_zeros - ( len(s) - p ))
+        integer_part = '+' + integer_part
+    dp = localeconv()['decimal_point']
+    fract_part = ("{:0" + str(decimal_point) + "}").format(abs(x) % scale_factor)
+    fract_part = fract_part.rstrip('0')
+    if len(fract_part) < num_zeros:
+        fract_part += "0" * (num_zeros - len(fract_part))
+    result = integer_part + dp + fract_part
     if whitespaces:
-        s += " "*( 1 + decimal_point - ( len(s) - p ))
-        s = " "*( 13 - decimal_point - ( p )) + s
-    return s
-
+        result += " " * (decimal_point - len(fract_part))
+        result = " " * (15 - len(result)) + result
+    return result.decode('utf8')
 
 def format_time(timestamp):
     import datetime
@@ -188,6 +190,34 @@ def age(from_date, since_date = None, target_tz=None, include_seconds=False):
     else:
         return "over %d years ago" % (round(distance_in_minutes / 525600))
 
+block_explorer_info = {
+    'Blockchain.info': ('https://blockchain.info',
+                        {'tx': 'tx', 'addr': 'address'}),
+    'Blockr.io': ('https://btc.blockr.io',
+                        {'tx': 'tx/info', 'addr': 'address/info'}),
+    'Insight.is': ('https://insight.bitpay.com',
+                        {'tx': 'tx', 'addr': 'address'}),
+    'Blocktrail.com': ('https://www.blocktrail.com/BTC',
+                        {'tx': 'tx', 'addr': 'address'}),
+    'TradeBlock.com': ('https://tradeblock.com/blockchain',
+                        {'tx': 'tx', 'addr': 'address'}),
+}
+
+def block_explorer(config):
+    return config.get('block_explorer', 'Blockchain.info')
+
+def block_explorer_tuple(config):
+    return block_explorer_info.get(block_explorer(config))
+
+def block_explorer_URL(config, kind, item):
+    be_tuple = block_explorer_tuple(config)
+    if not be_tuple:
+        return
+    kind_str = be_tuple[1].get(kind)
+    if not kind_str:
+        return
+    url_parts = [be_tuple[0], kind_str, item]
+    return "/".join(url_parts)
 
 # URL decode
 #_ud = re.compile('%([0-9a-hA-H]{2})', re.MULTILINE)
@@ -195,7 +225,7 @@ def age(from_date, since_date = None, target_tz=None, include_seconds=False):
 
 def parse_URI(uri):
     import bitcoin
-    from decimal import Decimal
+    from bitcoin import COIN
 
     if ':' not in uri:
         assert bitcoin.is_address(uri)
@@ -225,7 +255,7 @@ def parse_URI(uri):
             k = int(m.group(2)) - 8
             amount = Decimal(m.group(1)) * pow(  Decimal(10) , k)
         else:
-            amount = Decimal(am) * 100000000
+            amount = Decimal(am) * COIN
     if 'message' in pq:
         message = pq['message'][0].decode('utf8')
     if 'label' in pq:
@@ -247,7 +277,7 @@ def create_URI(addr, amount, message):
         return ""
     query = []
     if amount:
-        query.append('amount=%s'%format_satoshis(amount))
+        query.append('amount=%s'%format_satoshis_plain(amount))
     if message:
         if type(message) == unicode:
             message = message.encode('utf8')
@@ -297,9 +327,13 @@ class SocketPipe:
         self.socket = socket
         self.message = ''
         self.set_timeout(0.1)
+        self.recv_time = time.time()
 
     def set_timeout(self, t):
         self.socket.settimeout(t)
+
+    def idle_time(self):
+        return time.time() - self.recv_time
 
     def get(self):
         while True:
@@ -326,10 +360,10 @@ class SocketPipe:
                 traceback.print_exc(file=sys.stderr)
                 data = ''
 
-            if not data:
-                self.socket.close()
+            if not data:  # Connection closed remotely
                 return None
             self.message += data
+            self.recv_time = time.time()
 
     def send(self, request):
         out = json.dumps(request) + '\n'
@@ -427,3 +461,24 @@ class StoreDict(dict):
         if key in self.keys():
             dict.pop(self, key)
             self.save()
+
+
+import bitcoin
+from plugins import run_hook
+
+class Contacts(StoreDict):
+
+    def __init__(self, config):
+        StoreDict.__init__(self, config, 'contacts')
+
+    def resolve(self, k):
+        if bitcoin.is_address(k):
+            return {'address':k, 'type':'address'}
+        if k in self.keys():
+            _type, addr = self[k]
+            if _type == 'address':
+                return {'address':addr, 'type':'contact'}
+        out = run_hook('resolve_address', k)
+        if out:
+            return out
+        raise Exception("Invalid Bitcoin address or alias", k)

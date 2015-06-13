@@ -18,14 +18,12 @@
 
 
 import hashlib
-import httplib
 import os.path
 import re
 import sys
 import threading
 import time
 import traceback
-import urllib2
 import urlparse
 import requests
 
@@ -50,7 +48,7 @@ ca_list, ca_keyID = x509.load_certificates(ca_path)
 # status of payment requests
 PR_UNPAID  = 0
 PR_EXPIRED = 1
-PR_SENT    = 2     # sent but not propagated
+PR_UNKNOWN = 2     # sent but not propagated
 PR_PAID    = 3     # send and propagated
 PR_ERROR   = 4     # could not parse
 
@@ -60,10 +58,9 @@ import json
 def get_payment_request(url):
     u = urlparse.urlparse(url)
     if u.scheme in ['http', 'https']:
-        connection = httplib.HTTPConnection(u.netloc) if u.scheme == 'http' else httplib.HTTPSConnection(u.netloc)
-        connection.request("GET", u.geturl(), headers=REQUEST_HEADERS)
-        response = connection.getresponse()
-        data = response.read()
+        response = requests.request('GET', url, headers=REQUEST_HEADERS)
+        data = response.content
+        print_error('fetched payment request', url, len(data))
     elif u.scheme == 'file':
         with open(u.path, 'r') as f:
             data = f.read()
@@ -102,9 +99,13 @@ class PaymentRequest:
         self.payment_url = self.details.payment_url
 
     def verify(self):
+        """ verify chain of certificates. The last certificate is the CA"""
         if not ca_list:
             self.error = "Trusted certificate authorities list not found"
             return False
+        if not self.raw:
+            self.error = "Empty request"
+            return
         paymntreq = pb2.PaymentRequest()
         paymntreq.ParseFromString(self.raw)
         if not paymntreq.signature:
@@ -257,13 +258,12 @@ class PaymentRequest:
 
 
 
-
-def make_payment_request(outputs, memo, time, expires, cert_path, chain_path):
+def make_payment_request(outputs, memo, time, expires, key_path, cert_path):
     pd = pb2.PaymentDetails()
     for script, amount in outputs:
         pd.outputs.add(amount=amount, script=script)
     pd.time = time
-    pd.expires = expires
+    pd.expires = expires if expires else 0
     pd.memo = memo
     pr = pb2.PaymentRequest()
     pr.serialized_payment_details = pd.SerializeToString()
@@ -271,11 +271,11 @@ def make_payment_request(outputs, memo, time, expires, cert_path, chain_path):
     pr = pb2.PaymentRequest()
     pr.serialized_payment_details = pd.SerializeToString()
     pr.signature = ''
-    if cert_path and chain_path:
+    if key_path and cert_path:
         import tlslite
-        with open(cert_path, 'r') as f:
+        with open(key_path, 'r') as f:
             rsakey = tlslite.utils.python_rsakey.Python_RSAKey.parsePEM(f.read())
-        with open(chain_path, 'r') as f:
+        with open(cert_path, 'r') as f:
             chain = tlslite.X509CertChain()
             chain.parsePemList(f.read())
         certificates = pb2.X509Certificates()
@@ -287,6 +287,20 @@ def make_payment_request(outputs, memo, time, expires, cert_path, chain_path):
         sig = rsakey.sign(x509.PREFIX_RSA_SHA256 + hashBytes)
         pr.signature = bytes(sig)
     return pr.SerializeToString()
+
+
+def make_request(config, req):
+    from transaction import Transaction
+    addr = req['address']
+    time = req['timestamp']
+    amount = req['amount']
+    expiration = req['expiration']
+    message = req['memo']
+    script = Transaction.pay_script('address', addr).decode('hex')
+    outputs = [(script, amount)]
+    key_path = config.get('ssl_privkey')
+    cert_path = config.get('ssl_chain')
+    return make_payment_request(outputs, message, time, time + expiration if expiration else None, key_path, cert_path)
 
 
 

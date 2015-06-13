@@ -14,7 +14,7 @@ from electrum.bitcoin import EncodeBase58Check, DecodeBase58Check, public_key_to
 from electrum.i18n import _
 from electrum.plugins import BasePlugin, hook
 from electrum.transaction import deserialize
-from electrum.wallet import BIP32_HD_Wallet
+from electrum.wallet import BIP32_HD_Wallet, BIP32_Wallet
 
 from electrum.util import format_satoshis
 import hashlib
@@ -35,18 +35,13 @@ except ImportError:
 
 class Plugin(BasePlugin):
 
-    def fullname(self):
-        return 'BTChip Wallet'
-
-    def description(self):
-        return 'Provides support for BTChip hardware wallet\n\nRequires github.com/btchip/btchip-python'
-
     def __init__(self, gui, name):
         BasePlugin.__init__(self, gui, name)
         self._is_available = self._init()
         self.wallet = None
-        if self._is_available:
-            electrum.wallet.wallet_types.append(('hardware', 'btchip', _("BTChip wallet"), BTChipWallet))
+
+    def constructor(self, s):
+        return BTChipWallet(s)
 
     def _init(self):
         return BTCHIP
@@ -70,9 +65,6 @@ class Plugin(BasePlugin):
             return False
         return True
 
-    def enable(self):
-        return BasePlugin.enable(self)
-
     def btchip_is_connected(self):
         try:
             self.wallet.get_client().getFirmwareVersion()
@@ -81,7 +73,9 @@ class Plugin(BasePlugin):
         return True
 
     @hook
-    def load_wallet(self, wallet):
+    def load_wallet(self, wallet, window):
+        self.wallet = wallet
+        self.window = window
         if self.btchip_is_connected():
             if not self.wallet.check_proper_device():
                 QMessageBox.information(self.window, _('Error'), _("This wallet does not match your BTChip device"), _('OK'))
@@ -138,7 +132,12 @@ class BTChipWallet(BIP32_HD_Wallet):
             return 'create_accounts'
 
     def can_create_accounts(self):
-        return True
+        return False
+
+    def synchronize(self):
+        # synchronize existing accounts
+        BIP32_Wallet.synchronize(self)
+        # no further accounts for the moment
 
     def can_change_password(self):
         return False
