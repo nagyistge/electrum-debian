@@ -23,6 +23,8 @@ Section: python
 Architecture: all
 Depends: ${misc:Depends},
  ${python:Depends}
+Replaces: electrum
+Breaks: electrum (<= 2.3.1~)
 Description: Easy to use Bitcoin client - Python module
  This package provides a lightweight Bitcoin client which protects
  you from losing your bitcoins in a backup mistake or computer
