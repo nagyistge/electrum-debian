@@ -1,11 +1,22 @@
-# Author: Trevor Perrin
-# See the LICENSE file for legal information regarding use of this file.
+# This module uses code from TLSLlite
+# TLSLite Author: Trevor Perrin)
 
-from .compat import *
+
 import binascii
 
-#This code is shared with tackpy (somewhat), so I'd rather make minimal
-#changes, and preserve the use of a2b_base64 throughout.
+from asn1tinydecoder import *
+
+
+def a2b_base64(s):
+    try:
+        b = bytearray(binascii.a2b_base64(s))
+    except Exception as e:
+        raise SyntaxError("base64 error: %s" % e)
+    return b
+
+def b2a_base64(b):
+    return binascii.b2a_base64(b)
+
 
 def dePem(s, name):
     """Decode a PEM string into a bytearray of its payload.
@@ -15,7 +26,7 @@ def dePem(s, name):
 
     -----BEGIN CERTIFICATE-----
     MIIBXDCCAUSgAwIBAgIBADANBgkqhkiG9w0BAQUFADAPMQ0wCwYDVQQDEwRUQUNL
-...
+    ...
     KoZIhvcNAQEFBQADAwA5kw==
     -----END CERTIFICATE-----    
 
@@ -33,7 +44,7 @@ def dePem(s, name):
     s = s[start+len("-----BEGIN %s-----" % name) : end]
     retBytes = a2b_base64(s) # May raise SyntaxError
     return retBytes
-    
+
 def dePemList(s, name):
     """Decode a sequence of PEM blocks into a list of bytearrays.
 
@@ -80,7 +91,7 @@ def pem(b, name):
     
     -----BEGIN CERTIFICATE-----
     MIIBXDCCAUSgAwIBAgIBADANBgkqhkiG9w0BAQUFADAPMQ0wCwYDVQQDEwRUQUNL
-...
+    ...
     KoZIhvcNAQEFBQADAwA5kw==
     -----END CERTIFICATE-----    
     """
@@ -96,3 +107,58 @@ def pem(b, name):
 def pemSniff(inStr, name):
     searchStr = "-----BEGIN %s-----" % name
     return searchStr in inStr
+
+
+def parse_private_key(s):
+    """Parse a string containing a PEM-encoded <privateKey>."""
+    if pemSniff(s, "PRIVATE KEY"):
+        bytes = dePem(s, "PRIVATE KEY")
+        return _parsePKCS8(bytes)
+    elif pemSniff(s, "RSA PRIVATE KEY"):
+        bytes = dePem(s, "RSA PRIVATE KEY")
+        return _parseSSLeay(bytes)
+    else:
+        raise SyntaxError("Not a PEM private key file")
+
+
+def _parsePKCS8(bytes):
+    s = str(bytes)
+    root = asn1_node_root(s)
+    version_node = asn1_node_first_child(s, root)
+    version = bytestr_to_int(asn1_get_value_of_type(s, version_node, 'INTEGER'))
+    if version != 0:
+        raise SyntaxError("Unrecognized PKCS8 version")
+    rsaOID_node = asn1_node_next(s, version_node)
+    ii = asn1_node_first_child(s, rsaOID_node)
+    rsaOID = decode_OID(asn1_get_value_of_type(s, ii, 'OBJECT IDENTIFIER'))
+    if rsaOID != '1.2.840.113549.1.1.1':
+        raise SyntaxError("Unrecognized AlgorithmIdentifier")
+    privkey_node = asn1_node_next(s, rsaOID_node)
+    value = asn1_get_value_of_type(s, privkey_node, 'OCTET STRING')
+    return _parseASN1PrivateKey(value)
+
+
+def _parseSSLeay(bytes):
+    return _parseASN1PrivateKey(str(bytes))
+
+
+def bytesToNumber(s):
+    return int(binascii.hexlify(s), 16)
+
+
+def _parseASN1PrivateKey(s):
+    root = asn1_node_root(s)
+    version_node = asn1_node_first_child(s, root)
+    version = bytestr_to_int(asn1_get_value_of_type(s, version_node, 'INTEGER'))
+    if version != 0:
+        raise SyntaxError("Unrecognized RSAPrivateKey version")
+    n = asn1_node_next(s, version_node)
+    e = asn1_node_next(s, n)
+    d = asn1_node_next(s, e)
+    p = asn1_node_next(s, d)
+    q = asn1_node_next(s, p)
+    dP = asn1_node_next(s, q)
+    dQ = asn1_node_next(s, dP)
+    qInv = asn1_node_next(s, dQ)
+    return map(lambda x: bytesToNumber(asn1_get_value_of_type(s, x, 'INTEGER')), [n, e, d, p, q, dP, dQ, qInv])
+

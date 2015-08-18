@@ -36,7 +36,7 @@ class Plugin(BasePlugin):
 
     button_label = _("Verify GA instant")
 
-    @hook 
+    @hook
     def init_qt(self, gui):
         self.win = gui.main_window
 
@@ -45,7 +45,7 @@ class Plugin(BasePlugin):
         self.wallet = d.wallet
         self.verify_button = b = QPushButton(self.button_label)
         b.clicked.connect(lambda: self.do_verify(d.tx))
-        d.buttons.insert(1, b)
+        d.buttons.insert(0, b)
         self.transaction_dialog_update(d)
 
     def get_my_addr(self, tx):
@@ -80,6 +80,7 @@ class Plugin(BasePlugin):
             addr = self.get_my_addr(tx)
             message = "Please verify if %s is GreenAddress instant confirmed" % tx.hash()
             sig = self.wallet.sign_message(addr, message, password)
+            sig = base64.b64encode(sig)
 
             # 2. send the request
             response = requests.request("GET", ("https://greenaddress.it/verify/?signature=%s&txhash=%s" % (urllib.quote(sig), tx.hash())),

@@ -40,7 +40,6 @@ class NetworkProxy(util.DaemonThread):
         self.subscriptions = {}
         self.debug = False
         self.lock = threading.Lock()
-        self.pending_transactions_for_notifications = []
         self.callbacks = {}
 
         if socket:
@@ -50,21 +49,26 @@ class NetworkProxy(util.DaemonThread):
             self.pipe = util.QueuePipe()
             self.network = Network(self.pipe, config)
             self.network.start()
-            for key in ['status','banner','updated','servers','interfaces']:
+            for key in ['fee','status','banner','updated','servers','interfaces']:
                 value = self.network.get_status_value(key)
                 self.pipe.get_queue.put({'method':'network.status', 'params':[key, value]})
 
         # status variables
-        self.status = 'connecting'
+        self.status = 'unknown'
         self.servers = {}
         self.banner = ''
         self.blockchain_height = 0
         self.server_height = 0
         self.interfaces = []
+        self.jobs = []
+        # value returned by estimatefee
+        self.fee = None
 
 
     def run(self):
         while self.is_running():
+            for job in self.jobs:
+                job()
             try:
                 response = self.pipe.get()
             except util.timeout:
@@ -87,13 +91,18 @@ class NetworkProxy(util.DaemonThread):
                 self.status = value
             elif key == 'banner':
                 self.banner = value
+            elif key == 'fee':
+                self.fee = value
             elif key == 'updated':
                 self.blockchain_height, self.server_height = value
             elif key == 'servers':
                 self.servers = value
             elif key == 'interfaces':
                 self.interfaces = value
-            self.trigger_callback(key)
+            if key in ['status', 'updated']:
+                self.trigger_callback(key)
+            else:
+                self.trigger_callback(key, (value,))
             return
 
         msg_id = response.get('id')
@@ -163,7 +172,7 @@ class NetworkProxy(util.DaemonThread):
             _id = r.get('id')
             ids.remove(_id)
             if r.get('error'):
-                return BaseException(r.get('error'))
+                raise BaseException(r.get('error'))
             result = r.get('result')
             res[_id] = r.get('result')
         out = []
@@ -202,8 +211,8 @@ class NetworkProxy(util.DaemonThread):
     def set_parameters(self, host, port, protocol, proxy, auto_connect):
         proxy_str = serialize_proxy(proxy)
         server_str = serialize_server(host, port, protocol)
-        self.config.set_key('auto_connect', auto_connect, True)
-        self.config.set_key("proxy", proxy_str, True)
+        self.config.set_key('auto_connect', auto_connect, False)
+        self.config.set_key("proxy", proxy_str, False)
         self.config.set_key("server", server_str, True)
         # abort if changes were not allowed by config
         if self.config.get('server') != server_str or self.config.get('proxy') != proxy_str:
@@ -220,8 +229,8 @@ class NetworkProxy(util.DaemonThread):
                 self.callbacks[event] = []
             self.callbacks[event].append(callback)
 
-    def trigger_callback(self, event):
+    def trigger_callback(self, event, params=()):
         with self.lock:
             callbacks = self.callbacks.get(event,[])[:]
         if callbacks:
-            [callback() for callback in callbacks]
+            [callback(*params) for callback in callbacks]

@@ -15,6 +15,12 @@ elif platform.system() == 'Darwin':
 else:
     MONOSPACE_FONT = 'monospace'
 
+GREEN_BG = "QWidget {background-color:#80ff80;}"
+RED_BG = "QWidget {background-color:#ffcccc;}"
+RED_FG = "QWidget {color:red;}"
+BLUE_FG = "QWidget {color:blue;}"
+BLACK_FG = "QWidget {color:black;}"
+
 
 class WaitingDialog(QThread):
     def __init__(self, parent, message, run_task, on_success=None, on_complete=None):
@@ -162,6 +168,13 @@ class CopyButton(QPushButton):
     def __init__(self, text_getter, app):
         QPushButton.__init__(self, _("Copy"))
         self.clicked.connect(lambda: app.clipboard().setText(text_getter()))
+
+class CopyCloseButton(QPushButton):
+    def __init__(self, text_getter, app, dialog):
+        QPushButton.__init__(self, _("Copy and Close"))
+        self.clicked.connect(lambda: app.clipboard().setText(text_getter()))
+        self.clicked.connect(dialog.close)
+        self.setDefault(True)
 
 class OkButton(QPushButton):
     def __init__(self, dialog, label=None):
@@ -322,6 +335,8 @@ class MyTreeWidget(QTreeWidget):
             self.is_edit = False
 
     def label_changed(self, item, column):
+        if column != self.edit_column:
+            return
         if self.is_edit:
             return
         self.is_edit = True

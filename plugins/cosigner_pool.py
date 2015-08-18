@@ -29,7 +29,7 @@ from electrum import transaction
 from electrum.plugins import BasePlugin, hook
 from electrum.i18n import _
 
-from electrum_gui.qt import transaction_dialog
+from electrum_gui.qt.transaction_dialog import show_transaction
 
 import sys
 import traceback
@@ -115,12 +115,15 @@ class Plugin(BasePlugin):
     def transaction_dialog(self, d):
         self.send_button = b = QPushButton(_("Send to cosigner"))
         b.clicked.connect(lambda: self.do_send(d.tx))
-        d.buttons.insert(2, b)
+        d.buttons.insert(0, b)
         self.transaction_dialog_update(d)
 
     @hook
     def transaction_dialog_update(self, d):
         if d.tx.is_complete():
+            self.send_button.hide()
+            return
+        if self.wallet.can_sign(d.tx):
             self.send_button.hide()
             return
         for xpub, K, _hash in self.cosigner_list:
@@ -180,6 +183,4 @@ class Plugin(BasePlugin):
 
         self.listener.clear()
         tx = transaction.Transaction(message)
-        d = transaction_dialog.TxDialog(tx, self.win)
-        d.saved = False
-        d.show()
+        show_transaction(tx, self.win, prompt_if_unsaved=True)

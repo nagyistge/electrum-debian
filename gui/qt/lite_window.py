@@ -308,12 +308,15 @@ class MiniWindow(QDialog):
 
     def pay_from_URI(self, URI):
         try:
-            dest_address, amount, label, message, request_url = util.parse_URI(URI)
+            out = util.parse_URI(URI)
         except:
             return
-        self.address_input.setText(dest_address)
-        self.address_field_changed(dest_address)
-        self.amount_input.setText(str(amount))
+        address = out.get('address')
+        amount = out.get('amount')
+        amount_text = str(D(amount) / (10**self.actuator.g.decimal_point))
+        self.address_input.setText(address)
+        self.address_field_changed(address)
+        self.amount_input.setText(amount_text)
 
     def activate(self):
         pass
@@ -789,9 +792,9 @@ class MiniDriver(QObject):
         self.network = main_window.network
         self.window = mini_window
 
-        if self.network:
-            self.network.register_callback('updated',self.update_callback)
-            self.network.register_callback('status', self.update_callback)
+        #if self.network:
+        #    self.network.register_callback('updated',self.update_callback)
+        #    self.network.register_callback('status', self.update_callback)
 
         self.state = None
 

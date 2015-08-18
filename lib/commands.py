@@ -24,6 +24,7 @@ import copy
 import argparse
 import json
 import ast
+import base64
 from functools import wraps
 from decimal import Decimal
 
@@ -34,6 +35,7 @@ from bitcoin import is_address, hash_160_to_bc_address, hash_160, COIN
 from transaction import Transaction
 import paymentrequest
 from paymentrequest import PR_PAID, PR_UNPAID, PR_UNKNOWN, PR_EXPIRED
+import contacts
 
 known_commands = {}
 
@@ -78,7 +80,7 @@ class Commands:
         self.network = network
         self._callback = callback
         self.password = None
-        self.contacts = util.Contacts(self.config)
+        self.contacts = contacts.Contacts(self.config)
 
     def _run(self, method, args, password_getter):
         cmd = known_commands[method]
@@ -92,9 +94,9 @@ class Commands:
         return result
 
     @command('')
-    def help(self):
-        """Print help"""
-        return 'Commands: ' + ', '.join(sorted(known_commands.keys()))
+    def commands(self):
+        """List of commands"""
+        return ' '.join(sorted(known_commands.keys()))
 
     @command('')
     def create(self):
@@ -104,7 +106,7 @@ class Commands:
     def restore(self):
         """Restore a wallet from seed. """
 
-    @command('')
+    @command('w')
     def deseed(self):
         """Remove seed from wallet. This creates a seedless, watching-only
         wallet."""
@@ -199,8 +201,8 @@ class Commands:
         t = Transaction(tx)
         t.deserialize()
         if privkey:
-            pubkey = bitcoin.public_key_from_private_key(sec)
-            t.sign({pubkey:sec})
+            pubkey = bitcoin.public_key_from_private_key(privkey)
+            t.sign({pubkey:privkey})
         else:
             self.wallet.sign_transaction(t, self.password)
         return t
@@ -237,20 +239,21 @@ class Commands:
 
     @command('wp')
     def getprivatekeys(self, address):
-        """Get the private keys of an address. Address must be in wallet."""
-        return self.wallet.get_private_key(address, self.password)
+        """Get private keys of addresses. You may pass a single wallet address, or a list of wallet addresses."""
+        is_list = type(address) is list
+        domain = address if is_list else [address]
+        out = [self.wallet.get_private_key(address, self.password) for address in domain]
+        return out if is_list else out[0]
 
     @command('w')
     def ismine(self, address):
         """Check if address is in wallet. Return true if and only address is in wallet"""
         return self.wallet.is_mine(address)
 
-    @command('wp')
-    def dumpprivkeys(self, domain=None):
-        """Dump private keys from your wallet"""
-        if domain is None:
-            domain = self.wallet.addresses(True)
-        return [self.wallet.get_private_key(address, self.password) for address in domain]
+    @command('')
+    def dumpprivkeys(self):
+        """Deprecated."""
+        return "This command is deprecated. Use a pipe instead: 'electrum listaddresses | electrum getprivatekeys - '"
 
     @command('')
     def validateaddress(self, address):
@@ -321,6 +324,11 @@ class Commands:
         return self.wallet.get_master_public_keys()
 
     @command('wp')
+    def getmasterprivate(self):
+        """Get master private key. Return your wallet\'s master private key"""
+        return str(self.wallet.get_master_private_key(self.wallet.root_name, self.password))
+
+    @command('wp')
     def getseed(self):
         """Get seed phrase. Print the generation seed of your wallet."""
         s = self.wallet.get_mnemonic(self.password)
@@ -331,9 +339,9 @@ class Commands:
         """Import a private key. """
         try:
             addr = self.wallet.import_key(privkey, self.password)
-            out = "Keypair imported: ", addr
+            out = "Keypair imported: " + addr
         except Exception as e:
-            out = "Error: Keypair import failed: " + str(e)
+            out = "Error: " + str(e)
         return out
 
     def _resolver(self, x):
@@ -346,26 +354,29 @@ class Commands:
 
     @command('n')
     def sweep(self, privkey, destination, tx_fee=None, nocheck=False):
-        """Sweep private key. Returns a transaction that spends UTXOs from
+        """Sweep private keys. Returns a transaction that spends UTXOs from
         privkey to a destination address. The transaction is not
         broadcasted."""
+        privkeys = privkey if type(privkey) is list else [privkey]
         self.nocheck = nocheck
         dest = self._resolver(destination)
         if tx_fee is None:
             tx_fee = 0.0001
         fee = int(Decimal(tx_fee)*COIN)
-        return Transaction.sweep([privkey], self.network, dest, fee)
+        return Transaction.sweep(privkeys, self.network, dest, fee)
 
     @command('wp')
     def signmessage(self, address, message):
         """Sign a message with a key. Use quotes if your message contains
         whitespaces"""
-        return self.wallet.sign_message(address, message, self.password)
+        sig = self.wallet.sign_message(address, message, self.password)
+        return base64.b64encode(sig)
 
     @command('')
     def verifymessage(self, address, signature, message):
         """Verify a signature."""
-        return bitcoin.verify_message(address, signature, message)
+        sig = base64.b64decode(signature)
+        return bitcoin.verify_message(address, sig, message)
 
     def _mktx(self, outputs, fee, change_addr, domain, nocheck, unsigned):
         self.nocheck = nocheck
@@ -385,14 +396,15 @@ class Commands:
                         self.wallet.add_input_info(i)
                     output = ('address', address, amount)
                     dummy_tx = Transaction.from_io(inputs, [output])
-                    fee = self.wallet.estimated_fee(dummy_tx)
+                    fee_per_kb = self.wallet.fee_per_kb(self.config)
+                    fee = self.wallet.estimated_fee(dummy_tx, fee_per_kb)
                 amount -= fee
             else:
                 amount = int(COIN*Decimal(amount))
             final_outputs.append(('address', address, amount))
 
         coins = self.wallet.get_spendable_coins(domain)
-        tx = self.wallet.make_unsigned_transaction(coins, final_outputs, fee, change_addr)
+        tx = self.wallet.make_unsigned_transaction(coins, final_outputs, self.config, fee, change_addr)
         str(tx) #this serializes
         if not unsigned:
             self.wallet.sign_transaction(tx, self.password)
@@ -570,13 +582,31 @@ class Commands:
             else:
                 return False
         amount = int(Decimal(requested_amount)*COIN)
-        req = self.wallet.add_payment_request(addr, amount, memo, expiration, self.config)
+        expiration = int(expiration)
+        req = self.wallet.make_payment_request(addr, amount, memo, expiration)
+        self.wallet.add_payment_request(req, self.config)
         return self._format_request(req)
 
+    @command('wp')
+    def signrequest(self, address):
+        "Sign payment request with an OpenAlias"
+        alias = self.config.get('alias')
+        if not alias:
+            raise BaseException('No alias in your configuration')
+        alias_addr = self.contacts.resolve(alias)['address']
+        self.wallet.sign_payment_request(address, alias, alias_addr, self.password)
+
     @command('w')
-    def rmrequest(self, key):
+    def rmrequest(self, address):
         """Remove a payment request"""
-        return self.wallet.remove_payment_request(key, self.config)
+        return self.wallet.remove_payment_request(address, self.config)
+
+    @command('w')
+    def clearrequests(self):
+        """Remove all payment requests"""
+        for k in self.wallet.receive_requests.keys():
+            self.wallet.remove_payment_request(k, self.config)
+
 
 param_descriptions = {
     'privkey': 'Private key. Type \'?\' to get a prompt.',

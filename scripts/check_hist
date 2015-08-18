@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 
-import util
-peers = util.get_peers()
-results = util.send_request(peers, {'method':'blockchain.address.get_history','params':['1JHaKMpEB7LsZWjbHJZbzCVLndEG5G5UwZ']})
+import time, Queue
+import electrum
+q = Queue.Queue()
 
-for n,v in results.items():
-    print "%40s"%n, v
-
-
-
+interface = electrum.Interface('ecdsa.net:110:s', q)
+interface.start()
+i, r = q.get()
+if not interface.is_connected():
+    raise BaseException("not connected")
+# 2. get list of peers
+interface.pipe.send("2\n")#end_request(2)#{'id':0, 'method':2, 'params':['1JHaKMpEB7LsZWjbHJZbzCVLndEG5G5UwZ']})
+i, r = q.get(timeout=10000)
+print r

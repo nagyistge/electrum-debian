@@ -200,7 +200,7 @@ def run_settings_dialog(self):
     except Exception:
         show_message("error")
         return
-    self.wallet.set_fee(fee)
+    self.config.set_key('fee_per_kb', fee)
 
     try:
         nz = int( nz )
@@ -690,7 +690,7 @@ class ElectrumWindow:
                 return
             coins = self.wallet.get_spendable_coins()
             try:
-                tx = self.wallet.make_unsigned_transaction(coins, [('op_return', 'dummy_tx', amount)], fee)
+                tx = self.wallet.make_unsigned_transaction(coins, [('op_return', 'dummy_tx', amount)], self.config, fee)
                 self.funds_error = False
             except NotEnoughFunds:
                 self.funds_error = True
@@ -730,9 +730,12 @@ class ElectrumWindow:
             entry.modify_base(Gtk.StateType.NORMAL, Gdk.color_parse("#ffffff"))
 
     def set_url(self, url):
-        payto, amount, label, message, payment_request = parse_URI(url)
+        out = parse_URI(url)
+        address = out.get('address')
+        message = out.get('message')
+        amount = out.get('amount')
         self.notebook.set_current_page(1)
-        self.payto_entry.set_text(payto)
+        self.payto_entry.set_text(address)
         self.message_entry.set_text(message)
         self.amount_entry.set_text(amount)
         self.payto_sig.set_visible(False)
@@ -809,7 +812,7 @@ class ElectrumWindow:
             password = None
 
         try:
-            tx = self.wallet.mktx( [(to_address, amount)], password, fee )
+            tx = self.wallet.mktx( [(to_address, amount)], password, self.config, fee)
         except Exception as e:
             self.show_message(str(e))
             return
