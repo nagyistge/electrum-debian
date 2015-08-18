@@ -4,5 +4,4 @@ pbkdf2
 requests
 qrcode
 protobuf
-tlslite
 dnspython

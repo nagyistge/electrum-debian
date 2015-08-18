@@ -35,6 +35,10 @@ class Plugin(BasePlugin):
                 'Linux': 'libportaudio.so'
             }[platform.system()]
 
+    @hook
+    def init_qt(self, gui):
+        pass
+
     def is_available(self):
         return amodem is not None
 
@@ -78,7 +82,7 @@ class Plugin(BasePlugin):
             self.sender = self._send(parent=dialog, blob=blob)
             self.sender.start()
         b.clicked.connect(handler)
-        dialog.buttons.insert(0, b)
+        dialog.sharing_buttons.insert(-1, b)
 
     @hook
     def scan_text_edit(self, parent):

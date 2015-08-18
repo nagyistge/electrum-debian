@@ -27,6 +27,7 @@ ca_path = requests.certs.where()
 
 import util
 import x509
+import pem
 from version import ELECTRUM_VERSION, PROTOCOL_VERSION
 from simple_config import SimpleConfig
 
@@ -72,6 +73,7 @@ class TcpInterface(threading.Thread):
         # parse server
         self.server = server
         self.host, self.port, self.protocol = self.server.split(':')
+        self.host = str(self.host)
         self.port = int(self.port)
         self.use_ssl = (self.protocol == 's')
 
@@ -118,31 +120,6 @@ class TcpInterface(threading.Thread):
             queue.put((self, {'method':method, 'params':params, 'result':result, 'id':_id}))
 
 
-    def check_host_name(self, peercert, name):
-        """Simple certificate/host name checker.  Returns True if the
-        certificate matches, False otherwise.  Does not support
-        wildcards."""
-        # Check that the peer has supplied a certificate.
-        # None/{} is not acceptable.
-        if not peercert:
-            return False
-        if peercert.has_key("subjectAltName"):
-            for typ, val in peercert["subjectAltName"]:
-                if typ == "DNS" and val == name:
-                    return True
-        else:
-            # Only check the subject DN if there is no subject alternative
-            # name.
-            cn = None
-            for attr, val in peercert["subject"]:
-                # Use most-specific (last) commonName attribute.
-                if attr == "commonName":
-                    cn = val
-            if cn is not None:
-                return cn == name
-        return False
-
-
     def get_simple_socket(self):
         try:
             l = socket.getaddrinfo(self.host, self.port, socket.AF_UNSPEC, socket.SOCK_STREAM)
@@ -172,10 +149,10 @@ class TcpInterface(threading.Thread):
                     return
                 # try with CA first
                 try:
-                    s = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_SSLv23, cert_reqs=ssl.CERT_REQUIRED, ca_certs=ca_path, do_handshake_on_connect=True)
+                    s = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_TLSv1, cert_reqs=ssl.CERT_REQUIRED, ca_certs=ca_path, do_handshake_on_connect=True)
                 except ssl.SSLError, e:
                     s = None
-                if s and self.check_host_name(s.getpeercert(), self.host):
+                if s and check_host_name(s.getpeercert(), self.host):
                     self.print_error("SSL certificate signed by CA")
                     return s
 
@@ -185,7 +162,7 @@ class TcpInterface(threading.Thread):
                 if s is None:
                     return
                 try:
-                    s = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_SSLv23, cert_reqs=ssl.CERT_NONE, ca_certs=None)
+                    s = ssl.wrap_socket(s, ssl_version=ssl.PROTOCOL_TLSv1, cert_reqs=ssl.CERT_NONE, ca_certs=None)
                 except ssl.SSLError, e:
                     self.print_error("SSL error retrieving SSL certificate:", e)
                     return
@@ -208,7 +185,7 @@ class TcpInterface(threading.Thread):
         if self.use_ssl:
             try:
                 s = ssl.wrap_socket(s,
-                                    ssl_version=ssl.PROTOCOL_SSLv23,
+                                    ssl_version=ssl.PROTOCOL_TLSv1,
                                     cert_reqs=ssl.CERT_REQUIRED,
                                     ca_certs= (temporary_path if is_new else cert_path),
                                     do_handshake_on_connect=True)
@@ -225,9 +202,8 @@ class TcpInterface(threading.Thread):
                     with open(cert_path) as f:
                         cert = f.read()
                     try:
-                        x = x509.X509()
-                        x.parse(cert)
-                        x.slow_parse()
+                        b = pem.dePem(cert, 'CERTIFICATE')
+                        x = x509.X509(b)
                     except:
                         traceback.print_exc(file=sys.stderr)
                         self.print_error("wrong certificate")
@@ -254,9 +230,9 @@ class TcpInterface(threading.Thread):
         return s
 
     def send_request(self, request, response_queue = None):
-        '''Queue a request.  Blocking only if called from other threads.'''
+        '''Queue a request.'''
         self.request_time = time.time()
-        self.request_queue.put((copy.deepcopy(request), response_queue), threading.current_thread() != self)
+        self.request_queue.put((copy.deepcopy(request), response_queue))
 
     def send_requests(self):
         '''Sends all queued requests'''
@@ -335,13 +311,41 @@ class TcpInterface(threading.Thread):
         self.response_queue.put((self, None))
 
 
+def _match_hostname(name, val):
+    if val == name:
+        return True
+
+    return val.startswith('*.') and name.endswith(val[1:])
+
+
+def check_host_name(peercert, name):
+    """Simple certificate/host name checker.  Returns True if the
+    certificate matches, False otherwise."""
+    # Check that the peer has supplied a certificate.
+    # None/{} is not acceptable.
+    if not peercert:
+        return False
+    if peercert.has_key("subjectAltName"):
+        for typ, val in peercert["subjectAltName"]:
+            if typ == "DNS" and _match_hostname(name, val):
+                return True
+    else:
+        # Only check the subject DN if there is no subject alternative
+        # name.
+        cn = None
+        for attr, val in peercert["subject"]:
+            # Use most-specific (last) commonName attribute.
+            if attr == "commonName":
+                cn = val
+        if cn is not None:
+            return _match_hostname(name, cn)
+    return False
 
 
 def check_cert(host, cert):
     try:
-        x = x509.X509()
-        x.parse(cert)
-        x.slow_parse()
+        b = pem.dePem(cert, 'CERTIFICATE')
+        x = x509.X509(b)
     except:
         traceback.print_exc(file=sys.stdout)
         return

@@ -24,6 +24,7 @@ import bitcoin
 from bitcoin import *
 from util import print_error
 import time
+import sys
 import struct
 
 #
@@ -367,32 +368,29 @@ def parse_scriptSig(d, bytes):
         d['address'] = address
         return
 
-    # p2sh transaction, 2 of n
+    # p2sh transaction, m of n
     match = [ opcodes.OP_0 ] + [ opcodes.OP_PUSHDATA4 ] * (len(decoded) - 1)
-
     if not match_decoded(decoded, match):
         print_error("cannot find address in input script", bytes.encode('hex'))
         return
-
     x_sig = [x[1].encode('hex') for x in decoded[1:-1]]
-    d['signatures'] = parse_sig(x_sig)
-    d['num_sig'] = 2
-
     dec2 = [ x for x in script_GetOp(decoded[-1][1]) ]
-    match_2of2 = [ opcodes.OP_2, opcodes.OP_PUSHDATA4, opcodes.OP_PUSHDATA4, opcodes.OP_2, opcodes.OP_CHECKMULTISIG ]
-    match_2of3 = [ opcodes.OP_2, opcodes.OP_PUSHDATA4, opcodes.OP_PUSHDATA4, opcodes.OP_PUSHDATA4, opcodes.OP_3, opcodes.OP_CHECKMULTISIG ]
-    if match_decoded(dec2, match_2of2):
-        x_pubkeys = [ dec2[1][1].encode('hex'), dec2[2][1].encode('hex') ]
-    elif match_decoded(dec2, match_2of3):
-        x_pubkeys = [ dec2[1][1].encode('hex'), dec2[2][1].encode('hex'), dec2[3][1].encode('hex') ]
-    else:
+    m = dec2[0][0] - opcodes.OP_1 + 1
+    n = dec2[-2][0] - opcodes.OP_1 + 1
+    op_m = opcodes.OP_1 + m - 1
+    op_n = opcodes.OP_1 + n - 1
+    match_multisig = [ op_m ] + [opcodes.OP_PUSHDATA4]*n + [ op_n, opcodes.OP_CHECKMULTISIG ]
+    if not match_decoded(dec2, match_multisig):
         print_error("cannot find address in input script", bytes.encode('hex'))
         return
-
-    d['x_pubkeys'] = x_pubkeys
+    x_pubkeys = map(lambda x: x[1].encode('hex'), dec2[1:-2])
     pubkeys = [parse_xpub(x)[0] for x in x_pubkeys]     # xpub, addr = parse_xpub()
+    redeemScript = Transaction.multisig_script(pubkeys, m)
+    # write result in d
+    d['num_sig'] = m
+    d['signatures'] = parse_sig(x_sig)
+    d['x_pubkeys'] = x_pubkeys
     d['pubkeys'] = pubkeys
-    redeemScript = Transaction.multisig_script(pubkeys,2)
     d['redeemScript'] = redeemScript
     d['address'] = hash_160_to_bc_address(hash_160(redeemScript.decode('hex')), 5)
 
@@ -484,12 +482,48 @@ class Transaction:
 
     def __init__(self, raw):
         self.raw = raw
+        self.inputs = None
 
     def update(self, raw):
         self.raw = raw
+        self.inputs = None
         self.deserialize()
 
+    def update_signatures(self, raw):
+        """Add new signatures to a transaction"""
+        d = deserialize(raw)
+        for i, txin in enumerate(self.inputs):
+            sigs1 = txin.get('signatures')
+            sigs2 = d['inputs'][i].get('signatures')
+            for sig in sigs2:
+                if sig in sigs1:
+                    continue
+                for_sig = Hash(self.tx_for_sig(i).decode('hex'))
+                # der to string
+                order = ecdsa.ecdsa.generator_secp256k1.order()
+                r, s = ecdsa.util.sigdecode_der(sig.decode('hex'), order)
+                sig_string = ecdsa.util.sigencode_string(r, s, order)
+                pubkeys = txin.get('pubkeys')
+                compressed = True
+                for recid in range(4):
+                    public_key = MyVerifyingKey.from_signature(sig_string, recid, for_sig, curve = SECP256k1)
+                    pubkey = point_to_ser(public_key.pubkey.point, compressed).encode('hex')
+                    if pubkey in pubkeys:
+                        public_key.verify_digest(sig_string, for_sig, sigdecode = ecdsa.util.sigdecode_string)
+                        j = pubkeys.index(pubkey)
+                        print_error("adding sig", i, j, pubkey, sig)
+                        self.inputs[i]['signatures'][j] = sig
+                        self.inputs[i]['x_pubkeys'][j] = pubkey
+                        break
+        # redo raw
+        self.raw = self.serialize()
+
+
     def deserialize(self):
+        if self.raw is None:
+            self.raw = self.serialize()
+        if self.inputs is not None:
+            return
         d = deserialize(self.raw)
         self.inputs = d['inputs']
         self.outputs = [(x['type'], x['address'], x['value']) for x in d['outputs']]
@@ -507,6 +541,7 @@ class Transaction:
     @classmethod
     def sweep(klass, privkeys, network, to_address, fee):
         inputs = []
+        keypairs = {}
         for privkey in privkeys:
             pubkey = public_key_from_private_key(privkey)
             address = address_from_private_key(privkey)
@@ -523,6 +558,7 @@ class Transaction:
                 item['signatures'] = [None]
                 item['num_sig'] = 1
             inputs += u
+            keypairs[pubkey] = privkey
 
         if not inputs:
             return
@@ -530,35 +566,18 @@ class Transaction:
         total = sum(i.get('value') for i in inputs) - fee
         outputs = [('address', to_address, total)]
         self = klass.from_io(inputs, outputs)
-        self.sign({ pubkey:privkey })
+        self.sign(keypairs)
         return self
 
     @classmethod
-    def multisig_script(klass, public_keys, num=None):
+    def multisig_script(klass, public_keys, m):
         n = len(public_keys)
-        if num is None: num = n
-
-        assert num <= n and n in [2,3] , 'Only "2 of 2", and "2 of 3" transactions are supported'
-
-        if num==2:
-            s = '52'
-        elif num == 3:
-            s = '53'
-        else:
-            raise
-
-        for k in public_keys:
-            s += op_push(len(k)/2) + k
-        if n==2:
-            s += '52'
-        elif n==3:
-            s += '53'
-        else:
-            raise
-        s += 'ae'
-
-        return s
-
+        assert n <= 15
+        assert m <= n
+        op_m = format(opcodes.OP_1 + m - 1, 'x')
+        op_n = format(opcodes.OP_1 + n - 1, 'x')
+        keylist = [op_push(len(k)/2) + k for k in public_keys]
+        return op_m + ''.join(keylist) + op_n + 'ae'
 
     @classmethod
     def pay_script(self, output_type, addr):
@@ -616,7 +635,7 @@ class Transaction:
                 script += push_script(x_pubkey)
             else:
                 script = '00' + script          # put op_0 in front of script
-                redeem_script = self.multisig_script(pubkeys,2)
+                redeem_script = self.multisig_script(pubkeys, num_sig)
                 script += push_script(redeem_script)
 
         elif for_sig==i:
@@ -626,6 +645,10 @@ class Transaction:
 
         return script
 
+    def BIP_LI01_sort(self):
+        # See https://github.com/kristovatlas/rfc/blob/master/bips/bip-li01.mediawiki
+        self.inputs.sort(key = lambda i: (i['prevout_hash'], i['prevout_n']))
+        self.outputs.sort(key = lambda o: (o[2], self.pay_script(o[0], o[1])))
 
     def serialize(self, for_sig=None):
         inputs = self.inputs
@@ -684,6 +707,13 @@ class Transaction:
     def is_complete(self):
         s, r = self.signature_count()
         return r == s
+
+    def inputs_without_script(self):
+        out = set()
+        for i, txin in enumerate(self.inputs):
+            if txin.get('scriptSig') == '':
+                out.add(i)
+        return out
 
     def inputs_to_sign(self):
         out = set()
