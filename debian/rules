@@ -14,3 +14,10 @@ override_dh_installchangelogs::
 override_dh_auto_build::
 	pyrcc4 icons.qrc -o gui/icons_rc.py
 	dh_auto_build
+
+override_dh_auto_install::
+	dh_auto_install
+	mkdir -p debian/electrum/usr/bin debian/electrum/usr/share
+	mv debian/python-electrum/usr/bin debian/electrum/usr
+	mv debian/python-electrum/usr/share/applications \
+	   debian/electrum/usr/share
