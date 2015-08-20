@@ -1,1 +1,0 @@
-Search.setIndex({envversion:46,terms:{index:0,search:0,modul:0,content:0,blah:0,foo:0,page:0},objtypes:{},objnames:{},filenames:["index"],titles:["Welcome to Electrum&#8217;s documentation!"],objects:{},titleterms:{zzzop:0,welcom:0,tabl:0,indic:0,electrum:0,document:0}})
