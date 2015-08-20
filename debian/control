@@ -39,6 +39,7 @@ Package: electrum
 Architecture: all
 Depends: ${misc:Depends},
  ${sphinxdoc:Depends},
+ ${python:Depends},
  python-electrum (= ${binary:Version})
 Description: Easy to use Bitcoin client
  This package provides a lightweight Bitcoin client which protects
