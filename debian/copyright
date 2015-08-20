@@ -10,58 +10,14 @@ Comment:
  Various authors are described in the AUTHORS file, including parts on
  which they worked and hold license.
 
-Files: electrum
- gui/android.py
- gui/gtk.py
- gui/qt/__init__.py
- gui/qt/network_dialog.py
- gui/qt/password_dialog.py
- gui/qt/seed_dialog.py
- gui/qt/transaction_dialog.py
- gui/qt/version_getter.py
- lib/account.py
- lib/bitcoin.py
- lib/blockchain.py
- lib/commands.py
- lib/i18n.py
- lib/interface.py
- lib/mnemonic.py
- lib/transaction.py
- lib/verifier.py
- lib/wallet_bitkey.py
- lib/wallet.py
- scripts/merchant/merchant.py
-Copyright: 2011-2013, ThomasV <thomasv@gitorious>
-License: GPL-3+
-
 Files: aes/*
 Copyright: 2008, Josh Davis <http://www.josh-davis.org>
  Alex Martelli <http://www.aleax.it>
 License: Apache-2
 
-Files: lib/socks.py
-Copyright: 2006, Dan-Haim
-License: BSD-3-clause~Dan
-Comment:
- Minor modifications made by Christopher Gilbert
- <http://motomastyle.com> for use in PyLoris.
- .
- Minor modifications made by Mario Vilas
- <http://breakingcode.wordpress.com> mainly to merge bug fixes found
- on Sourceforge.
-
-Files: lib/ripemd.py
-Copyright: 2001, Markus Friedl
-License: BSD-2-clause
-
-Files: lib/bmp.py
-Copyright: 2003, Paul McGuire
- 2009, Margus Laak
-License: Expat
-
-Files: lib/pyqrnative.py
-Copyright: 2009, Kazuhiko Arase
-License: Expat
+Files: debian/*
+Copyright: 2013, Vasudev Kamath
+License: GPL-3+
 
 Files: ecdsa/*
 Copyright: 2010, Brian Warner
@@ -70,39 +26,120 @@ Comment:
  Portions written in 2005 by Peter Pearson are placed in public
  domain.
 
-Files: ecdsa/six.py
-Copyright: 2010-2012, Benjamin Peterson
-License: Expat
-
-Files: debian/*
-Copyright: 2013, Vasudev Kamath
+Files: gui/jsonrpc.py
+Copyright: 2014, 2015, Thomas Voegtlin
 License: GPL-3+
 
-License: BSD-3-clause~Dan
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in
-    the documentation and/or other materials provided with the
-    distribution.
- 3. Neither the name of Dan Haim nor the names of his contributors may
-    be used to endorse or promote products derived from this software
-    without specific prior written permission.
- .   
- THIS SOFTWARE IS PROVIDED BY DAN HAIM "AS IS" AND ANY EXPRESS OR
- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED. IN NO EVENT SHALL DAN HAIM OR HIS CONTRIBUTORS BE
- LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA OR PROFITS; OR
- BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF
- THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
- DAMANGE.
+Files: gui/qt/history_widget.py
+  gui/qt/qrwindow.py
+Copyright: 2014, 2015, Thomas Voegtlin
+License: GPL-3+
+
+Files: gui/qt/password_dialog.py
+  gui/qt/seed_dialog.py
+Copyright: 2013, ecdsa@github
+License: GPL-3+
+
+Files: lib/*
+Copyright: 2014, 2015, Thomas Voegtlin
+License: GPL-3+
+
+Files: lib/account.py
+  lib/bitcoin.py
+  lib/commands.py
+  lib/i18n.py
+  lib/interface.py
+  lib/old_mnemonic.py
+  lib/transaction.py
+  lib/wallet.py
+Copyright: 2011-2013, thomasv@gitorious
+License: GPL-3+
+
+Files: lib/asn1tinydecoder.py
+Copyright: no-info-found
+License: GPL-2+
+
+Files: lib/blockchain.py
+  lib/verifier.py
+Copyright: 2012, thomasv@ecdsa.org
+License: GPL-3+
+
+Files: lib/bmp.py
+Copyright: 2003, Paul McGuire
+ 2009, Margus Laak
+License: Expat
+
+Files: lib/ripemd.py
+Copyright: 2001, Markus Friedl.
+License: BSD-2-clause
+
+Files: lib/socks.py
+Copyright: 2006, Dan-Haim.
+License: BSD-2-clause
+Comment:
+ Minor modifications made by Christopher Gilbert
+ <http://motomastyle.com> for use in PyLoris.
+ .
+ Minor modifications made by Mario Vilas
+ <http://breakingcode.wordpress.com> mainly to merge bug fixes found
+ on Sourceforge.
+
+Files: packages/*
+Copyright: 2010-2015, Benjamin Peterson
+License: Expat
+
+Files: packages/aes.py
+Copyright: 2008, Josh Davis ( http:www.josh-davis.org )
+License: Apache-2.0
+
+Files: packages/google/*
+Copyright: 2007-2009, 2012, Google Inc.
+License: BSD-3-clause
+
+Files: packages/pbkdf2.py
+Copyright: 2007-2011, Dwayne C. Litzenberger <dlitz@dlitz.net>
+License: Expat
+
+Files: packages/requests/packages/*
+Copyright: 2010-2015, Benjamin Peterson
+License: Expat
+
+Files: packages/requests/packages/chardet/*
+Copyright: 1998, 2001, 2005, the Initial Developer.
+License: LGPL-2.1+
+
+Files: packages/requests/packages/chardet/__init__.py
+  packages/requests/packages/chardet/compat.py
+Copyright: no-info-found
+License: LGPL-2.1+
+
+Files: plugins/*
+Copyright: 2014, 2015, Thomas Voegtlin
+License: GPL-3+
+
+Files: scripts/authenticator.py
+Copyright: 2014, 2015, Thomas Voegtlin
+License: GPL-3+
+
+License: Apache-2
+ Comment:
+ .
+ On Debian system Apache-2.0 license can be found in
+ /usr/share/common-licenses/Apache-2.0 .
+
+License: Apache-2.0
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+     http://www.apache.org/licenses/LICENSE-2.0
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS"BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ .
+ On Debian systems, the complete text of the Apache License,
+ Version 2.0 can be found in '/usr/share/common-licenses/Apache-2.0'.
 
 License: BSD-2-clause
  Redistribution and use in source and binary forms, with or without
@@ -127,6 +164,13 @@ License: BSD-2-clause
  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
  IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+License: BSD-3-clause
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the BSD license.
+ .
+ On Debian systems, the complete text of the BSD license in
+ '/usr/share/common-licenses/BSD'.
+
 License: Expat
  Permission is hereby granted, free of charge, to any person obtaining
  a copy of this software and associated documentation files (the
@@ -147,11 +191,14 @@ License: Expat
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-License: Apache-2
- Comment:
+License: GPL-2+
+ This program is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; version 2 dated June, 1991, or (at
+ your option) any later version.
  .
- On Debian system Apache-2.0 license can be found in
- /usr/share/common-licenses/Apache-2.0 .
+ On Debian systems, the complete text of version 2 of the GNU General
+ Public License can be found in '/usr/share/common-licenses/GPL-2'.
 
 License: GPL-3+
  Permission is granted to copy, distribute and/or modify this document
@@ -163,3 +210,11 @@ License: GPL-3+
  On Debian systems the 'GNU General Public License' version 3 is located
  in '/usr/share/common-licenses/GPL-3'.
 
+License: LGPL-2.1+
+ This program is free software; you can redistribute it and/or modify it
+ under the terms of the GNU Lesser General Public License as published by the
+ Free Software Foundation; version 2.1 of the License, or (at
+ your option) any later version.
+ .
+ On Debian systems, the complete text of version 2.1 of the GNU Lesser
+ General Public License can be found in `/usr/share/common-licenses/LGPL-2.1'.
