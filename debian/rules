@@ -6,7 +6,7 @@ export PYBUILD_NAME=electrum
 DEB_COPYRIGHT_CHECK_IGNORE_REGEX = ^(locale/.*/.*\.mo|data/dark/.*\.png|icons/.*\.png|LICENSE|debian/(changelog|copyright(|_hints|_newhints)|electrum.translations))$
 
 %:
-	dh $@ --with python2 --buildsystem=pybuild
+	dh $@ --with python2,sphinxdoc --buildsystem=pybuild
 
 override_dh_installchangelogs::
 	dh_installchangelogs -k RELEASE-NOTES
@@ -14,6 +14,7 @@ override_dh_installchangelogs::
 override_dh_auto_build::
 	pyrcc4 icons.qrc -o gui/icons_rc.py
 	dh_auto_build
+	make -C docs
 
 override_dh_auto_install::
 	dh_auto_install

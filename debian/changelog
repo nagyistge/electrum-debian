@@ -1,4 +1,4 @@
-electrum (2.4.2-1) UNRELEASED; urgency=medium
+electrum (2.4.2+dfsg1-1) unstable; urgency=medium
 
   [ Vasudev Kamath ]
   * Drop myself from uploaders.
@@ -12,7 +12,7 @@ electrum (2.4.2-1) UNRELEASED; urgency=medium
     - Remove 1001_use_sslv23_method.patch: merged upstream.
     - Remove 1002_qt_compatibility.patch: merged upstream.
 
- -- Vasudev Kamath <kamathvasudev@gmail.com>  Sun, 23 Nov 2014 20:07:00 +0530
+ -- Tristan Seligmann <mithrandi@debian.org>  Thu, 20 Aug 2015 23:17:59 +0200
 
 electrum (1.9.8-4) unstable; urgency=medium
 
