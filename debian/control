@@ -41,6 +41,7 @@ Depends: ${misc:Depends},
  ${sphinxdoc:Depends},
  ${python:Depends},
  python-electrum (= ${binary:Version})
+Suggests: python-trezor, python-btchip
 Description: Easy to use Bitcoin client
  This package provides a lightweight Bitcoin client which protects
  you from losing your bitcoins in a backup mistake or computer
