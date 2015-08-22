@@ -1,0 +1,16 @@
+electrum (2.4.2+dfsg1-1) unstable; urgency=low
+
+    This is the first upload of Electrum 2.0+ in Debian. When upgrading
+    from a wallet created by an older version of Electrum, it is a good
+    idea to have both an offline (eg. paper) backup of your wallet seed,
+    as well as an electronic copy of your wallet file if you need to use
+    it with a pre 2.0 Electrum version.
+
+    The first launch of Electrum 2.0+ will upgrade your wallet to the new
+    format; this requires regenerating all of the addresses in your
+    wallet, and may take some time if you have a large wallet. Once the
+    upgrade is complete, you will need to restart Electrum in order for
+    any addresses to show up in the "Addresses" tab. The new format is not
+    readable by versions of Electrum prior to 2.0.
+
+ -- Tristan Seligmann <mithrandi@debian.org>  Sat, 22 Aug 2015 18:26:57 +0200
