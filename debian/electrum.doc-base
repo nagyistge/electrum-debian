@@ -1,9 +1,0 @@
-Document: electrum
-Title: Misc documentation for electrum bitcoin client
-Author: Electrum Team
-Abstract: These document explain how to use electrum in console and in android
-Section: Network/Communication
-
-Format: HTML
-Index: /usr/share/doc/electrum/console.html
-Files: /usr/share/doc/electrum/*.html

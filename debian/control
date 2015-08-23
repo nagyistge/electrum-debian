@@ -12,7 +12,6 @@ Build-Depends: debhelper (>= 9),
  python-qt4,
  python-setuptools,
  pyqt4-dev-tools,
- python-sphinx,
 Standards-Version: 3.9.6
 Homepage: http://electrum.org/
 Vcs-Git: git://anonscm.debian.org/pkg-bitcoin/electrum.git
@@ -38,7 +37,6 @@ Description: Easy to use Bitcoin client - Python module
 Package: electrum
 Architecture: all
 Depends: ${misc:Depends},
- ${sphinxdoc:Depends},
  ${python:Depends},
  python-electrum (= ${binary:Version})
 Suggests: python-trezor, python-btchip

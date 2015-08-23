@@ -1,7 +1,8 @@
 electrum (2.4.4-1) unstable; urgency=low
 
   * New upstream release.
-    - No longer need to repack.
+    - No longer need to repack, docs removed upstream due to being
+      outdated / deprecated.
 
  -- Tristan Seligmann <mithrandi@debian.org>  Mon, 24 Aug 2015 00:44:34 +0200
 
