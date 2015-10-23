@@ -1,30 +1,30 @@
 Source: electrum
-Priority: optional
-Section: utils
 Maintainer: Debian Bitcoin Packaging Team <pkg-bitcoin-devel@lists.alioth.debian.org>
 Uploaders: Tristan Seligmann <mithrandi@debian.org>
+Section: utils
+Priority: optional
 Build-Depends:
  debhelper (>= 9),
  devscripts,
  dh-python,
  pyqt4-dev-tools,
  python,
- python-ecdsa (>= 0.9~),
+ python-ecdsa,
  python-qt4,
  python-setuptools,
  python-slowaes,
 Standards-Version: 3.9.6
-Homepage: http://electrum.org/
+Vcs-Browser: https://anonscm.debian.org/cgit/pkg-bitcoin/electrum.git
 Vcs-Git: git://anonscm.debian.org/pkg-bitcoin/electrum.git
-Vcs-Browser: http://anonscm.debian.org/gitweb/?p=pkg-bitcoin/electrum.git
+Homepage: http://electrum.org/
 X-Python-Version: >= 2.6
 
 Package: python-electrum
-Section: python
 Architecture: all
+Section: python
 Depends: ${misc:Depends}, ${python:Depends}
-Replaces: electrum
 Breaks: electrum (<= 2.3.1~)
+Replaces: electrum
 Description: Easy to use Bitcoin client - Python module
  This package provides a lightweight Bitcoin client which protects
  you from losing your bitcoins in a backup mistake or computer
