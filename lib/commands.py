@@ -101,19 +101,26 @@ class Commands:
     @command('')
     def create(self):
         """Create a new wallet"""
+        raise BaseException('Not a JSON-RPC command')
 
-    @command('')
-    def restore(self, concealed=False, mpk=None):
-        """Restore a wallet from seed. """
+    @command('wn')
+    def restore(self, text):
+        """Restore a wallet from text. Text can be a seed phrase, a master
+        public key, a master private key, a list of bitcoin addresses
+        or bitcoin private keys. If you want to be prompted for your
+        seed, type '?' or ':' (concealed) """
+        raise BaseException('Not a JSON-RPC command')
 
     @command('w')
     def deseed(self):
         """Remove seed from wallet. This creates a seedless, watching-only
         wallet."""
+        raise BaseException('Not a JSON-RPC command')
 
     @command('wp')
     def password(self):
         """Change wallet password. """
+        raise BaseException('Not a JSON-RPC command')
 
     @command('')
     def getconfig(self, key):
@@ -412,26 +419,18 @@ class Commands:
         return tx
 
     @command('wp')
-    def payto(self, destination, amount, tx_fee=None, from_addr=None, change_addr=None, nocheck=False, unsigned=False, deserialized=False, broadcast=False):
+    def payto(self, destination, amount, tx_fee=None, from_addr=None, change_addr=None, nocheck=False, unsigned=False, deserialized=False):
         """Create a transaction. """
         domain = [from_addr] if from_addr else None
         tx = self._mktx([(destination, amount)], tx_fee, change_addr, domain, nocheck, unsigned)
-        if broadcast:
-            r, h = self.wallet.sendtx(tx)
-            return h
-        else:
-            return tx.deserialize() if deserialized else tx
+        return tx.deserialize() if deserialized else tx
 
     @command('wp')
-    def paytomany(self, outputs, tx_fee=None, from_addr=None, change_addr=None, nocheck=False, unsigned=False, deserialized=False, broadcast=False):
+    def paytomany(self, outputs, tx_fee=None, from_addr=None, change_addr=None, nocheck=False, unsigned=False, deserialized=False):
         """Create a multi-output transaction. """
         domain = [from_addr] if from_addr else None
         tx = self._mktx(outputs, tx_fee, change_addr, domain, nocheck, unsigned)
-        if broadcast:
-            r, h = self.wallet.sendtx(tx)
-            return h
-        else:
-            return tx.deserialize() if deserialized else tx
+        return tx.deserialize() if deserialized else tx
 
     @command('wn')
     def history(self):
@@ -620,9 +619,7 @@ param_descriptions = {
 }
 
 command_options = {
-    'broadcast':   (None, "--broadcast",   "Broadcast the transaction to the Bitcoin network"),
     'password':    ("-W", "--password",    "Password"),
-    'concealed':   ("-C", "--concealed",   "Don't echo seed to console when restoring"),
     'receiving':   (None, "--receiving",   "Show only receiving addresses"),
     'change':      (None, "--change",      "Show only change addresses"),
     'frozen':      (None, "--frozen",      "Show only frozen addresses"),
@@ -638,7 +635,6 @@ command_options = {
     'entropy':     (None, "--entropy",     "Custom entropy"),
     'language':    ("-L", "--lang",        "Default language for wordlist"),
     'gap_limit':   ("-G", "--gap",         "Gap limit"),
-    'mpk':         (None, "--mpk",         "Restore from master public key"),
     'deserialized':("-d", "--deserialized","Return deserialized transaction"),
     'privkey':     (None, "--privkey",     "Private key. Set to '?' to get a prompt."),
     'unsigned':    ("-u", "--unsigned",    "Do not sign transaction"),
