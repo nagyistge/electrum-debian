@@ -40,6 +40,7 @@ Depends:
  python-electrum (= ${binary:Version}),
  ${misc:Depends},
  ${python:Depends},
+Recommends: python-qt4
 Suggests: python-btchip, python-trezor
 Description: Easy to use Bitcoin client
  This package provides a lightweight Bitcoin client which protects
