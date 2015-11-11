@@ -135,14 +135,8 @@ class ElectrumWindow(QMainWindow, PrintError):
         tabs.addTab(self.create_addresses_tab(), _('Addresses') )
         tabs.addTab(self.create_contacts_tab(), _('Contacts') )
         tabs.addTab(self.create_console_tab(), _('Console') )
-        tabs.setMinimumSize(660, 400)
         tabs.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setCentralWidget(tabs)
-
-        try:
-            self.setGeometry(*self.config.get("winpos-qt"))
-        except:
-            self.setGeometry(100, 100, 840, 400)
 
         if self.config.get("is_maximized"):
             self.showMaximized()
@@ -270,6 +264,11 @@ class ElectrumWindow(QMainWindow, PrintError):
         self.clear_receive_tab()
         self.receive_list.update()
         self.tabs.show()
+        # set geometry
+        try:
+            self.setGeometry(*self.wallet.storage.get("winpos-qt"))
+        except:
+            self.setGeometry(100, 100, 840, 400)
         self.show()
         if self.wallet.is_watching_only():
             msg = ' '.join([
@@ -965,22 +964,15 @@ class ElectrumWindow(QMainWindow, PrintError):
         grid.addLayout(buttons, 6, 1, 1, 2)
 
         def on_shortcut():
-            sendable = self.get_sendable_balance()
             inputs = self.get_coins()
-            for i in inputs:
-                self.wallet.add_input_info(i)
-            addr = self.payto_e.payto_address if self.payto_e.payto_address else self.dummy_address
-            output = ('address', addr, sendable)
-            dummy_tx = Transaction.from_io(inputs, [output])
+            amount, fee = self.wallet.get_max_amount(self.config, inputs, self.fee_e.get_amount())
             if self.fee_e.get_amount() is None:
-                fee_per_kb = self.wallet.fee_per_kb(self.config)
-                self.fee_e.setAmount(self.wallet.estimated_fee(dummy_tx, fee_per_kb))
-            self.amount_e.setAmount(max(0, sendable - self.fee_e.get_amount()))
+                self.fee_e.setAmount(fee)
+            self.amount_e.setAmount(max(0, amount))
             # emit signal for fiat_amount update
             self.amount_e.textEdited.emit("")
 
         self.amount_e.shortcut.connect(on_shortcut)
-
         self.payto_e.textChanged.connect(self.update_fee)
         self.amount_e.textEdited.connect(self.update_fee)
         self.fee_e.textEdited.connect(self.update_fee)
@@ -1537,10 +1529,6 @@ class ElectrumWindow(QMainWindow, PrintError):
 
         run_hook('receive_menu', menu, addrs)
         menu.exec_(self.address_list.viewport().mapToGlobal(position))
-
-
-    def get_sendable_balance(self):
-        return sum(map(lambda x:x['value'], self.get_coins()))
 
 
     def get_coins(self):
@@ -2698,6 +2686,8 @@ class ElectrumWindow(QMainWindow, PrintError):
             unit_result = units[unit_combo.currentIndex()]
             if self.base_unit() == unit_result:
                 return
+            edits = self.amount_e, self.fee_e, self.receive_amount_e, fee_e
+            amounts = [edit.get_amount() for edit in edits]
             if unit_result == 'BTC':
                 self.decimal_point = 8
             elif unit_result == 'mBTC':
@@ -2710,7 +2700,8 @@ class ElectrumWindow(QMainWindow, PrintError):
             self.history_list.update()
             self.receive_list.update()
             self.address_list.update()
-            fee_e.setAmount(self.wallet.fee_per_kb(self.config))
+            for edit, amount in zip(edits, amounts):
+                edit.setAmount(amount)
             self.update_status()
         unit_combo.currentIndexChanged.connect(on_unit)
         gui_widgets.append((unit_label, unit_combo))
@@ -2813,7 +2804,7 @@ class ElectrumWindow(QMainWindow, PrintError):
         self.config.set_key("is_maximized", self.isMaximized())
         if not self.isMaximized():
             g = self.geometry()
-            self.config.set_key("winpos-qt", [g.left(),g.top(),g.width(),g.height()])
+            self.wallet.storage.put("winpos-qt", [g.left(),g.top(),g.width(),g.height()])
         self.config.set_key("console-history", self.console.history[-50:], True)
         if self.qr_window:
             self.qr_window.close()

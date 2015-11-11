@@ -224,7 +224,8 @@ class Abstract_Wallet(PrintError):
             self.storage.put('transactions', tx, False)
             self.storage.put('txi', self.txi, False)
             self.storage.put('txo', self.txo, False)
-            self.storage.put('pruned_txo', self.pruned_txo, True)
+            self.storage.put('pruned_txo', self.pruned_txo, False)
+            self.storage.put('addr_history', self.history, True)
 
     def clear_history(self):
         with self.transaction_lock:
@@ -235,7 +236,6 @@ class Abstract_Wallet(PrintError):
         with self.lock:
             self.history = {}
             self.tx_addr_hist = {}
-        self.storage.put('addr_history', self.history, True)
 
     @profiler
     def build_reverse_history(self):
@@ -262,8 +262,9 @@ class Abstract_Wallet(PrintError):
                 if tx is not None:
                     tx.deserialize()
                     self.add_transaction(tx_hash, tx)
+                    save = True
         if save:
-            self.storage.put('addr_history', self.history, True)
+            self.save_transactions()
 
     # wizard action
     def get_action(self):
@@ -313,11 +314,6 @@ class Abstract_Wallet(PrintError):
 
     def is_up_to_date(self):
         with self.lock: return self.up_to_date
-
-    def update(self):
-        self.up_to_date = False
-        while not self.is_up_to_date():
-            time.sleep(0.1)
 
     def is_imported(self, addr):
         account = self.accounts.get(IMPORTED_ACCOUNT)
@@ -638,6 +634,19 @@ class Abstract_Wallet(PrintError):
                     coins = coins[1:] + [ coins[0] ]
         return [value for height, value in coins]
 
+    def get_max_amount(self, config, inputs, fee):
+        sendable = sum(map(lambda x:x['value'], inputs))
+        for i in inputs:
+            self.add_input_info(i)
+        addr = self.addresses(False)[0]
+        output = ('address', addr, sendable)
+        dummy_tx = Transaction.from_io(inputs, [output])
+        if fee is None:
+            fee_per_kb = self.fee_per_kb(config)
+            fee = self.estimated_fee(dummy_tx, fee_per_kb)
+        amount = max(0, sendable - fee)
+        return amount, fee
+
     def get_account_name(self, k):
         return self.labels.get(k, self.accounts[k].get_name(k))
 
@@ -781,6 +790,7 @@ class Abstract_Wallet(PrintError):
 
     def receive_tx_callback(self, tx_hash, tx, tx_height):
         self.add_transaction(tx_hash, tx)
+        self.save_transactions()
         self.add_unverified_tx(tx_hash, tx_height)
 
 
@@ -795,7 +805,6 @@ class Abstract_Wallet(PrintError):
                         self.remove_transaction(tx_hash)
 
             self.history[addr] = hist
-            self.storage.put('addr_history', self.history, True)
 
         for tx_hash, tx_height in hist:
             # add it in case it was previously unconfirmed
@@ -810,6 +819,8 @@ class Abstract_Wallet(PrintError):
                 tx.deserialize()
                 self.add_transaction(tx_hash, tx)
 
+        # Write updated TXI, TXO etc.
+        self.save_transactions()
 
     def get_history(self, domain=None):
         from collections import defaultdict
@@ -1135,21 +1146,23 @@ class Abstract_Wallet(PrintError):
             self.verifier = None
             self.storage.put('stored_height', self.get_local_height(), True)
 
-    def restore(self, callback):
+    def wait_until_synchronized(self, callback=None):
         from i18n import _
         def wait_for_wallet():
             self.set_up_to_date(False)
             while not self.is_up_to_date():
-                msg = "%s\n%s %d"%(
-                    _("Please wait..."),
-                    _("Addresses generated:"),
-                    len(self.addresses(True)))
-                apply(callback, (msg,))
+                if callback:
+                    msg = "%s\n%s %d"%(
+                        _("Please wait..."),
+                        _("Addresses generated:"),
+                        len(self.addresses(True)))
+                    apply(callback, (msg,))
                 time.sleep(0.1)
         def wait_for_network():
             while not self.network.is_connected():
-                msg = "%s \n" % (_("Connecting..."))
-                apply(callback, (msg,))
+                if callback:
+                    msg = "%s \n" % (_("Connecting..."))
+                    apply(callback, (msg,))
                 time.sleep(0.1)
         # wait until we are connected, because the user might have selected another server
         if self.network:
