@@ -421,6 +421,7 @@ plugins/plot.py
 plugins/trezor.py
 plugins/trustedcoin.py
 plugins/virtualkeyboard.py
+plugins/labels/labels.py
 scripts/authenticator.py
 scripts/bip70
 scripts/block_headers
