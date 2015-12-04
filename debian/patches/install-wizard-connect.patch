@@ -1,0 +1,21 @@
+From e9ee851bb2278c60485c48d644d945e382b3e098 Mon Sep 17 00:00:00 2001
+From: ThomasV <thomasv@electrum.org>
+Date: Thu, 3 Dec 2015 23:50:50 +0100
+Subject: [PATCH] fix: set auto_connect in installwizard
+
+---
+ gui/qt/installwizard.py | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/gui/qt/installwizard.py b/gui/qt/installwizard.py
+index 957fdbd..0c4d211 100644
+--- a/gui/qt/installwizard.py
++++ b/gui/qt/installwizard.py
+@@ -298,6 +298,7 @@ def network_dialog(self):
+             return NetworkDialog(self.network, self.config, None).do_exec()
+         else:
+             self.config.set_key('auto_connect', True, True)
++            self.network.auto_connect = True
+             return
+ 
+ 
