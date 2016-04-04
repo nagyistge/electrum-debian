@@ -4,18 +4,25 @@
 # Electrum - lightweight Bitcoin client
 # Copyright (C) 2011 thomasv@gitorious
 #
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
 #
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program. If not, see <http://www.gnu.org/licenses/>.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
 
 import hashlib
 import base64
@@ -30,10 +37,15 @@ import aes
 
 ################################## transactions
 
-MIN_RELAY_TX_FEE = 5000
 RECOMMENDED_FEE = 50000
 COINBASE_MATURITY = 100
 COIN = 100000000
+
+# supported types of transction outputs
+TYPE_ADDRESS = 0
+TYPE_PUBKEY  = 1
+TYPE_SCRIPT  = 2
+
 
 # AES encryption
 EncodeAES = lambda secret, s: base64.b64encode(aes.encryptData(secret,s))
@@ -195,16 +207,9 @@ def i2o_ECPublicKey(pubkey, compressed=False):
 ############ functions from pywallet #####################
 
 def hash_160(public_key):
-    try:
-        md = hashlib.new('ripemd160')
-        md.update(sha256(public_key))
-        return md.digest()
-    except Exception:
-        # not available in Android SL4a
-        import ripemd
-        md = ripemd.new(sha256(public_key))
-        return md.digest()
-
+    md = hashlib.new('ripemd160')
+    md.update(sha256(public_key))
+    return md.digest()
 
 def public_key_to_bc_address(public_key):
     h160 = hash_160(public_key)
@@ -307,6 +312,8 @@ def ASecretToSecret(key, addrtype=0):
     vch = DecodeBase58Check(key)
     if vch and vch[0] == chr((addrtype+128)&255):
         return vch[1:]
+    elif is_minikey(key):
+        return minikey_to_private_key(key)
     else:
         return False
 
@@ -372,6 +379,19 @@ def is_private_key(key):
 
 
 ########### end pywallet functions #######################
+
+def is_minikey(text):
+    # Minikeys are typically 22 or 30 characters, but this routine
+    # permits any length of 20 or more provided the minikey is valid.
+    # A valid minikey must begin with an 'S', be in base58, and when
+    # suffixed with '?' have its SHA256 hash begin with a zero byte.
+    # They are widely used in Casascius physical bitoins.
+    return (len(text) >= 20 and text[0] == 'S'
+            and all(c in __b58chars for c in text)
+            and ord(sha256(text + '?')[0]) == 0)
+
+def minikey_to_private_key(text):
+    return sha256(text)
 
 from ecdsa.ecdsa import curve_secp256k1, generator_secp256k1
 from ecdsa.curves import SECP256k1

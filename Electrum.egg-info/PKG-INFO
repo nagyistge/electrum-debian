@@ -1,10 +1,10 @@
 Metadata-Version: 1.0
 Name: Electrum
-Version: 2.5.4
+Version: 2.6.3
 Summary: Lightweight Bitcoin Wallet
 Home-page: https://electrum.org
 Author: Thomas Voegtlin
 Author-email: thomasv@electrum.org
-License: GNU GPLv3
+License: MIT Licence
 Description: Lightweight Bitcoin Wallet
 Platform: UNKNOWN
