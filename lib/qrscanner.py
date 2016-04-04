@@ -37,7 +37,7 @@ proc = None
 def scan_qr(config):
     global proc
     if not zbar:
-        raise RuntimeError("\n".join([_("Cannot start QR scanner."),_("The zbar package is not available."),_("On Linux, try 'sudo pip install zbar'")]))
+        raise RuntimeError("\n".join([_("Cannot start QR scanner."),_("The zbar package is not available."),_("Try 'sudo apt-get install python-zbar'")]))
     if proc is None:
         device = config.get("video_device", "default")
         if device == 'default':

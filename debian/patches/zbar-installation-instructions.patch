@@ -1,0 +1,18 @@
+Description: Suggest apt-get for installing zbar, instead of pip
+Author: Tristan Seligmann <mithrandi@debian.org>
+Forwarded: not-needed
+---
+This patch header follows DEP-3: http://dep.debian.net/deps/dep3/
+Index: b/lib/qrscanner.py
+===================================================================
+--- a/lib/qrscanner.py	2016-04-04 03:02:27.006432905 +0200
++++ b/lib/qrscanner.py	2016-04-04 03:10:06.058131453 +0200
+@@ -37,7 +37,7 @@
+ def scan_qr(config):
+     global proc
+     if not zbar:
+-        raise RuntimeError("\n".join([_("Cannot start QR scanner."),_("The zbar package is not available."),_("On Linux, try 'sudo pip install zbar'")]))
++        raise RuntimeError("\n".join([_("Cannot start QR scanner."),_("The zbar package is not available."),_("Try 'sudo apt-get install python-zbar'")]))
+     if proc is None:
+         device = config.get("video_device", "default")
+         if device == 'default':

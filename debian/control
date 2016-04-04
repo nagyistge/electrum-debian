@@ -41,7 +41,7 @@ Depends:
  ${misc:Depends},
  ${python:Depends},
 Recommends: python-qt4
-Suggests: python-btchip, python-trezor
+Suggests: python-btchip, python-trezor, python-zbar
 Description: Easy to use Bitcoin client
  This package provides a lightweight Bitcoin client which protects
  you from losing your bitcoins in a backup mistake or computer
