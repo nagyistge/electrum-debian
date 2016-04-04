@@ -4,6 +4,7 @@ electrum (2.6.3-1) unstable; urgency=medium
     - Drop backported install-wizard-connect.patch.
   * Add Suggests: python-zbar and update the installation hint to suggest
     apt-get instead of pip (closes: #819517).
+  * Bump Standards-Version to 3.9.7 (no changes).
 
  -- Tristan Seligmann <mithrandi@debian.org>  Mon, 04 Apr 2016 03:02:39 +0200
 

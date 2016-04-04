@@ -13,7 +13,7 @@ Build-Depends:
  python-qt4,
  python-setuptools,
  python-slowaes,
-Standards-Version: 3.9.6
+Standards-Version: 3.9.7
 Vcs-Browser: https://anonscm.debian.org/cgit/pkg-bitcoin/electrum.git
 Vcs-Git: git://anonscm.debian.org/pkg-bitcoin/electrum.git
 Homepage: http://electrum.org/
