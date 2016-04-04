@@ -13,10 +13,6 @@ Files: debian/*
 Copyright: 2013, Vasudev Kamath
 License: GPL-3+
 
-Files: gui/jsonrpc.py
-Copyright: 2014, 2015, Thomas Voegtlin
-License: GPL-3+
-
 Files: gui/qt/history_widget.py
   gui/qt/qrwindow.py
 Copyright: 2014, 2015, Thomas Voegtlin
@@ -42,23 +38,10 @@ Files: lib/account.py
 Copyright: 2011-2013, thomasv@gitorious
 License: GPL-3+
 
-Files: lib/asn1tinydecoder.py
-Copyright: no-info-found
-License: GPL-2+
-
 Files: lib/blockchain.py
   lib/verifier.py
 Copyright: 2012, thomasv@ecdsa.org
 License: GPL-3+
-
-Files: lib/bmp.py
-Copyright: 2003, Paul McGuire
- 2009, Margus Laak
-License: Expat
-
-Files: lib/ripemd.py
-Copyright: 2001, Markus Friedl.
-License: BSD-2-clause
 
 Files: lib/socks.py
 Copyright: 2006, Dan-Haim.
@@ -104,10 +87,6 @@ Files: plugins/*
 Copyright: 2014, 2015, Thomas Voegtlin
 License: GPL-3+
 
-Files: scripts/authenticator.py
-Copyright: 2014, 2015, Thomas Voegtlin
-License: GPL-3+
-
 License: Apache-2.0
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -121,29 +100,6 @@ License: Apache-2.0
  .
  On Debian systems, the complete text of the Apache License,
  Version 2.0 can be found in '/usr/share/common-licenses/Apache-2.0'.
-
-License: BSD-2-clause
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions
- are met:
- 1. Redistributions of source code must retain the above copyright
-    notice, this list of conditions and the following disclaimer.
- 2. Redistributions in binary form must reproduce the above copyright
-    notice, this list of conditions and the following disclaimer in
-    the documentation and/or other materials provided with the
-    distribution.
- .
- THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
- IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
- DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
- GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER
- IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
- IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 License: BSD-3-clause~Dan
  Redistribution and use in source and binary forms, with or without
@@ -217,15 +173,6 @@ License: Expat
  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-
-License: GPL-2+
- This program is free software; you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation; version 2 dated June, 1991, or (at
- your option) any later version.
- .
- On Debian systems, the complete text of version 2 of the GNU General
- Public License can be found in '/usr/share/common-licenses/GPL-2'.
 
 License: GPL-3+
  Permission is granted to copy, distribute and/or modify this document
