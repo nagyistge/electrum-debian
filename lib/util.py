@@ -1,6 +1,32 @@
+#!/usr/bin/env python
+#
+# Electrum - lightweight Bitcoin client
+# Copyright (C) 2011 Thomas Voegtlin
+#
+# Permission is hereby granted, free of charge, to any person
+# obtaining a copy of this software and associated documentation files
+# (the "Software"), to deal in the Software without restriction,
+# including without limitation the rights to use, copy, modify, merge,
+# publish, distribute, sublicense, and/or sell copies of the Software,
+# and to permit persons to whom the Software is furnished to do so,
+# subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be
+# included in all copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+# EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+# MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+# NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS
+# BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+# ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
 import os, sys, re, json
 import platform
 import shutil
+from collections import defaultdict
 from datetime import datetime
 from decimal import Decimal
 import traceback
@@ -8,6 +34,8 @@ import urlparse
 import urllib
 import threading
 from i18n import _
+
+base_units = {'BTC':8, 'mBTC':5, 'uBTC':2}
 
 def normalize_version(v):
     return [int(x) for x in re.sub(r'(\.0+)*$','', v).split(".")]
@@ -17,6 +45,12 @@ class NotEnoughFunds(Exception): pass
 class InvalidPassword(Exception):
     def __str__(self):
         return _("Incorrect password")
+
+# Throw this exception to unwind the stack like when an error occurs.
+# However unlike other exceptions the user won't be informed.
+class UserCancelled(Exception):
+    '''An exception that is suppressed from the user'''
+    pass
 
 class MyEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -44,6 +78,31 @@ class ThreadJob(PrintError):
     def run(self):
         """Called periodically from the thread"""
         pass
+
+class DebugMem(ThreadJob):
+    '''A handy class for debugging GC memory leaks'''
+    def __init__(self, classes, interval=30):
+        self.next_time = 0
+        self.classes = classes
+        self.interval = interval
+
+    def mem_stats(self):
+        import gc
+        self.print_error("Start memscan")
+        gc.collect()
+        objmap = defaultdict(list)
+        for obj in gc.get_objects():
+            for class_ in self.classes:
+                if isinstance(obj, class_):
+                    objmap[class_].append(obj)
+        for class_, objs in objmap.items():
+            self.print_error("%s: %d" % (class_.__name__, len(objs)))
+        self.print_error("Finish memscan")
+
+    def run(self):
+        if time.time() > self.next_time:
+            self.mem_stats()
+            self.next_time = time.time() + self.interval
 
 class DaemonThread(threading.Thread, PrintError):
     """ daemon thread that terminates cleanly """
@@ -121,22 +180,60 @@ def json_encode(obj):
 
 def json_decode(x):
     try:
-        return json.loads(x)
+        return json.loads(x, parse_float=decimal.Decimal)
     except:
         return x
 
 # decorator that prints execution time
 def profiler(func):
-    def do_profile(func, args):
+    def do_profile(func, args, kw_args):
         n = func.func_name
         t0 = time.time()
-        o = apply(func, args)
+        o = func(*args, **kw_args)
         t = time.time() - t0
         print_error("[profiler]", n, "%.4f"%t)
         return o
-    return lambda *args: do_profile(func, args)
+    return lambda *args, **kw_args: do_profile(func, args, kw_args)
 
 
+def android_ext_dir():
+    import jnius
+    env = jnius.autoclass('android.os.Environment')
+    return env.getExternalStorageDirectory().getPath()
+
+def android_data_dir():
+    import jnius
+    PythonActivity = jnius.autoclass('org.renpy.android.PythonActivity')
+    return PythonActivity.mActivity.getFilesDir().getPath() + '/data'
+
+def android_headers_path():
+    path = android_ext_dir() + '/org.electrum.electrum/blockchain_headers'
+    d = os.path.dirname(path)
+    if not os.path.exists(d):
+        os.mkdir(d)
+    return path
+
+def android_check_data_dir():
+    """ if needed, move old directory to sandbox """
+    ext_dir = android_ext_dir()
+    data_dir = android_data_dir()
+    old_electrum_dir = ext_dir + '/electrum'
+    if not os.path.exists(data_dir) and os.path.exists(old_electrum_dir):
+        import shutil
+        new_headers_path = android_headers_path()
+        old_headers_path = old_electrum_dir + '/blockchain_headers'
+        if not os.path.exists(new_headers_path) and os.path.exists(old_headers_path):
+            print_error("Moving headers file to", new_headers_path)
+            shutil.move(old_headers_path, new_headers_path)
+        print_error("Moving data to", data_dir)
+        shutil.move(old_electrum_dir, data_dir)
+    return data_dir
+
+def get_headers_path(config):
+    if 'ANDROID_DATA' in os.environ:
+        return android_headers_path()
+    else:
+        return os.path.join(config.path, 'blockchain_headers')
 
 def user_dir():
     if "HOME" in os.environ:
@@ -146,14 +243,7 @@ def user_dir():
     elif "LOCALAPPDATA" in os.environ:
         return os.path.join(os.environ["LOCALAPPDATA"], "Electrum")
     elif 'ANDROID_DATA' in os.environ:
-        try:
-            import jnius
-            env  = jnius.autoclass('android.os.Environment')
-            _dir =  env.getExternalStorageDirectory().getPath()
-            return _dir + '/electrum/'
-        except ImportError:
-            pass
-        return "/sdcard/electrum/"
+        return android_check_data_dir()
     else:
         #raise Exception("No home directory found in environment variables.")
         return
@@ -263,6 +353,8 @@ block_explorer_info = {
                         {'tx': 'tx/info', 'addr': 'address/info'}),
     'Blocktrail.com': ('https://www.blocktrail.com/BTC',
                         {'tx': 'tx', 'addr': 'address'}),
+    'BTC.com': ('https://chain.btc.com',
+                        {'tx': 'tx', 'addr': 'address'}),
     'Chain.so': ('https://www.chain.so',
                         {'tx': 'tx/BTC', 'addr': 'address/BTC'}),
     'Insight.is': ('https://insight.bitpay.com',
@@ -291,17 +383,18 @@ def block_explorer_URL(config, kind, item):
 #_ud = re.compile('%([0-9a-hA-H]{2})', re.MULTILINE)
 #urldecode = lambda x: _ud.sub(lambda m: chr(int(m.group(1), 16)), x)
 
-def parse_URI(uri):
+def parse_URI(uri, on_pr=None):
     import bitcoin
     from bitcoin import COIN
 
     if ':' not in uri:
-        assert bitcoin.is_address(uri)
+        if not bitcoin.is_address(uri):
+            raise BaseException("Not a bitcoin address")
         return {'address': uri}
 
     u = urlparse.urlparse(uri)
-    assert u.scheme == 'bitcoin'
-
+    if u.scheme != 'bitcoin':
+        raise BaseException("Not a bitcoin URI")
     address = u.path
 
     # python for android fails to parse query
@@ -317,7 +410,8 @@ def parse_URI(uri):
 
     out = {k: v[0] for k, v in pq.items()}
     if address:
-        assert bitcoin.is_address(address)
+        if not bitcoin.is_address(address):
+            raise BaseException("Invalid bitcoin address:" + address)
         out['address'] = address
     if 'amount' in out:
         am = out['amount']
@@ -337,6 +431,22 @@ def parse_URI(uri):
         out['exp'] = int(out['exp'])
     if 'sig' in out:
         out['sig'] = bitcoin.base_decode(out['sig'], None, base=58).encode('hex')
+
+    r = out.get('r')
+    sig = out.get('sig')
+    name = out.get('name')
+    if r or (name and sig):
+        def get_payment_request_thread():
+            import paymentrequest as pr
+            if name and sig:
+                s = pr.serialize_request(out).SerializeToString()
+                request = pr.PaymentRequest(s)
+            else:
+                request = pr.get_payment_request(r)
+            on_pr(request)
+        t = threading.Thread(target=get_payment_request_thread)
+        t.setDaemon(True)
+        t.start()
 
     return out
 
@@ -535,13 +645,14 @@ class StoreDict(dict):
 
 
 def check_www_dir(rdir):
-    # rewrite index.html every time
     import urllib, urlparse, shutil, os
     if not os.path.exists(rdir):
         os.mkdir(rdir)
     index = os.path.join(rdir, 'index.html')
-    src = os.path.join(os.path.dirname(__file__), 'www', 'index.html')
-    shutil.copy(src, index)
+    if not os.path.exists(index):
+        print_error("copying index.html")
+        src = os.path.join(os.path.dirname(__file__), 'www', 'index.html')
+        shutil.copy(src, index)
     files = [
         "https://code.jquery.com/jquery-1.9.1.min.js",
         "https://raw.githubusercontent.com/davidshimjs/qrcodejs/master/qrcode.js",
@@ -555,4 +666,3 @@ def check_www_dir(rdir):
         if not os.path.exists(path):
             print_error("downloading ", URL)
             urllib.urlretrieve(URL, path)
-
