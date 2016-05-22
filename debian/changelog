@@ -1,3 +1,9 @@
+electrum (2.6.4-1) UNRELEASED; urgency=medium
+
+  * New upstream release.
+
+ -- Tristan Seligmann <mithrandi@debian.org>  Sun, 22 May 2016 03:58:07 +0200
+
 electrum (2.6.3-1) unstable; urgency=medium
 
   * New upstream release.
