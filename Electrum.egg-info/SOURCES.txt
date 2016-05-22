@@ -1503,6 +1503,7 @@ lib/version.py
 lib/wallet.py
 lib/websockets.py
 lib/wizard.py
+lib/wl.py
 lib/x509.py
 lib/locale/ar_SA/LC_MESSAGES/electrum.mo
 lib/locale/bg_BG/LC_MESSAGES/electrum.mo

@@ -216,6 +216,7 @@ class Commands:
     @command('wp')
     def signtransaction(self, tx, privkey=None):
         """Sign a transaction. The wallet keys will be used unless a private key is provided."""
+        tx = Transaction(tx)
         if privkey:
             pubkey = bitcoin.public_key_from_private_key(privkey)
             h160 = bitcoin.hash_160(pubkey.decode('hex'))
@@ -228,11 +229,13 @@ class Commands:
     @command('')
     def deserialize(self, tx):
         """Deserialize a serialized transaction"""
+        tx = Transaction(tx)
         return tx.deserialize()
 
     @command('n')
     def broadcast(self, tx, timeout=30):
         """Broadcast a transaction to the network. """
+        tx = Transaction(tx)
         return self.network.broadcast(tx, timeout)
 
     @command('')
@@ -612,6 +615,11 @@ class Commands:
         self.network.send([('blockchain.address.subscribe', [address])], callback)
         return True
 
+    @command('wn')
+    def is_synchronized(self):
+        """ return wallet synchronization status """
+        return self.wallet.is_up_to_date()
+
     @command('')
     def help(self):
         # for the python console
@@ -757,6 +765,8 @@ def get_parser():
     for cmdname in sorted(known_commands.keys()):
         cmd = known_commands[cmdname]
         p = subparsers.add_parser(cmdname, parents=[parent_parser], help=cmd.help, description=cmd.description)
+        if cmdname == 'restore':
+            p.add_argument("-o", "--offline", action="store_true", dest="offline", default=False, help="Run offline")
         #p.set_defaults(func=run_cmdline)
         if cmd.requires_password:
             p.add_argument("-W", "--password", dest="password", default=None, help="password")
