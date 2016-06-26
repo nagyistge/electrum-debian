@@ -13,9 +13,9 @@ Build-Depends:
  python-qt4,
  python-setuptools,
  python-slowaes,
-Standards-Version: 3.9.6
-Vcs-Browser: https://anonscm.debian.org/cgit/pkg-bitcoin/electrum.git
-Vcs-Git: git://anonscm.debian.org/pkg-bitcoin/electrum.git
+Standards-Version: 3.9.8
+Vcs-Browser: https://anonscm.debian.org/git/pkg-bitcoin/electrum.git
+Vcs-Git: https://anonscm.debian.org/git/pkg-bitcoin/electrum.git
 Homepage: http://electrum.org/
 X-Python-Version: >= 2.6
 
@@ -41,7 +41,7 @@ Depends:
  ${misc:Depends},
  ${python:Depends},
 Recommends: python-qt4
-Suggests: python-btchip, python-trezor
+Suggests: python-btchip, python-trezor, python-zbar
 Description: Easy to use Bitcoin client
  This package provides a lightweight Bitcoin client which protects
  you from losing your bitcoins in a backup mistake or computer

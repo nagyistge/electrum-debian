@@ -1,3 +1,27 @@
+electrum (2.6.4-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Bump Standards-Version to 3.9.8 (no changes).
+
+ -- Tristan Seligmann <mithrandi@debian.org>  Sun, 22 May 2016 03:59:05 +0200
+
+electrum (2.6.3-1) unstable; urgency=medium
+
+  * New upstream release.
+    - Drop backported install-wizard-connect.patch.
+  * Add Suggests: python-zbar and update the installation hint to suggest
+    apt-get instead of pip (closes: #819517).
+  * Bump Standards-Version to 3.9.7 (no changes).
+  * Update Vcs-* links.
+
+ -- Tristan Seligmann <mithrandi@debian.org>  Mon, 04 Apr 2016 03:02:39 +0200
+
+electrum (2.5.4-2) unstable; urgency=medium
+
+  * Backport upstream patch (e9ee851b) for install wizard issue.
+
+ -- Tristan Seligmann <mithrandi@debian.org>  Fri, 04 Dec 2015 08:20:45 +0200
+
 electrum (2.5.4-1~bpo8+1) jessie-backports; urgency=medium
 
   * Rebuild for jessie-backports.
