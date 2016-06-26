@@ -1,3 +1,9 @@
+electrum (2.6.4-1~bpo8+1) jessie-backports; urgency=medium
+
+  * Rebuild for jessie-backports.
+
+ -- Tristan Seligmann <mithrandi@debian.org>  Sun, 26 Jun 2016 19:35:40 +0200
+
 electrum (2.6.4-1) unstable; urgency=medium
 
   * New upstream release.
